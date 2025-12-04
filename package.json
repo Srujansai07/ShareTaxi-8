@@ -1,0 +1,24 @@
+{
+  "name": "sharetaxi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hyper-local carpool and meetup app",
+  "workspaces": [
+    "mobile",
+    "web",
+    "shared"
+  ],
+  "scripts": {
+    "mobile": "cd mobile && npm start",
+    "web": "cd web && npm run dev",
+    "install:all": "npm install && cd mobile && npm install && cd ../web && npm install && cd ../shared && npm install"
+  },
+  "keywords": [
+    "carpool",
+    "rideshare",
+    "community",
+    "mobility"
+  ],
+  "author": "",
+  "license": "MIT"
+}

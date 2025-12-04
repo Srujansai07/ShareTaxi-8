@@ -1,0 +1,788 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id            String   @id @default(cuid())
+  phoneNumber   String   @unique
+  email         String?  @unique
+  
+  // Profile
+  fullName      String
+  displayName   String
+  photoUrl      String?
+  gender        Gender?
+  dateOfBirth   DateTime?
+  bio           String?
+  
+  // Building Information
+  buildingId    String
+  building      Building @relation(fields: [buildingId], references: [id])
+  tower         String?
+  flatNumber    String
+  
+  // Verification
+  isVerified    Boolean  @default(false)
+  verifiedAt    DateTime?
+  verificationMethod VerificationMethod?
+  govIdType     String?
+  govIdNumber   String?  @unique
+  
+  // Trust & Safety
+  trustScore    Float    @default(3.0)
+  totalRides    Int      @default(0)
+  completionRate Float   @default(0.0)
+  responseTime  Int?     // Average in minutes
+  
+  // Preferences
+  preferences   UserPreferences?
+  
+  // Emergency Contacts
+  emergencyContacts EmergencyContact[]
+  
+  // Relationships
+  ridesAsDriver    Ride[]       @relation("DriverRides")
+  ridesAsParticipant RideParticipant[]
+  sentMessages     Message[]    @relation("SentMessages")
+  receivedMessages Message[]    @relation("ReceivedMessages")
+  givenRatings     Rating[]     @relation("RaterUser")
+  receivedRatings  Rating[]     @relation("RatedUser")
+  sosAlerts        SOSAlert[]
+  notifications    Notification[]
+  
+  // Statistics
+  stats         UserStatistics?
+  
+  // Status
+  status        UserStatus @default(ACTIVE)
+  lastActiveAt  DateTime   @default(now())
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  @@index([buildingId])
+  @@index([phoneNumber])
+  @@index([status])
+  @@index([trustScore])
+}
+
+model UserPreferences {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Ride Preferences
+  genderPreference  GenderPreference @default(ANY)
+  smokingAllowed    Boolean @default(false)
+  petsAllowed       Boolean @default(false)
+  musicPreference   String  @default("any")
+  chatty            Boolean @default(true)
+  maxDetourKm       Float   @default(1.5)
+  
+  // Language
+  preferredLanguages String[] @default(["english"])
+  
+  // Notifications
+  pushEnabled       Boolean @default(true)
+  smsEnabled        Boolean @default(false)
+  emailEnabled      Boolean @default(true)
+  matchAlerts       Boolean @default(true)
+  messageAlerts     Boolean @default(true)
+  rideReminders     Boolean @default(true)
+  
+  // Privacy
+  profileVisibility ProfileVisibility @default(BUILDING_ONLY)
+  showPhoneNumber   Boolean @default(false)
+  showFlatNumber    Boolean @default(true)
+  showRideHistory   Boolean @default(false)
+  allowDirectMessages Boolean @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model UserStatistics {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  totalDistanceSaved    Float   @default(0) // in km
+  totalMoneySaved       Float   @default(0) // in INR
+  totalCO2Saved         Float   @default(0) // in kg
+  totalRides            Int     @default(0)
+  ridesAsDriver         Int     @default(0)
+  ridesAsPassenger      Int     @default(0)
+  newConnectionsMade    Int     @default(0)
+  recurringRideBuddies  Int     @default(0)
+  
+  // Badges
+  badges                String[] @default([])
+  level                 String   @default("newcomer")
+  points                Int      @default(0)
+  
+  updatedAt             DateTime @updatedAt
+}
+
+model EmergencyContact {
+  id           String @id @default(cuid())
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name         String
+  relationship String
+  phoneNumber  String
+  isPrimary    Boolean @default(false)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// ============================================
+// BUILDING MANAGEMENT
+// ============================================
+
+model Building {
+  id              String   @id @default(cuid())
+  name            String
+  type            BuildingType
+  
+  // Address
+  street          String
+  area            String
+  city            String
+  state           String
+  pincode         String
+  country         String   @default("India")
+  
+  // Location (PostGIS)
+  latitude        Float
+  longitude       Float
+  
+  // Metadata
+  totalUnits      Int?
+  totalFloors     Int?
+  towers          String[] @default([])
+  
+  // Verification
+  isVerified      Boolean  @default(false)
+  verifiedBy      String?  // Admin user ID
+  
+  // Relations
+  users           User[]
+  rides           Ride[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([city, area])
+  @@index([pincode])
+}
+
+// ============================================
+// RIDE MANAGEMENT
+// ============================================
+
+model Ride {
+  id              String   @id @default(cuid())
+  
+  // Owner
+  userId          String
+  user            User     @relation("DriverRides", fields: [userId], references: [id])
+  
+  // Status
+  status          RideStatus @default(ACTIVE)
+  
+  // Type
+  type            RideType
+  
+  // Origin
+  buildingId      String
+  building        Building @relation(fields: [buildingId], references: [id])
+  originAddress   String
+  originLat       Float
+  originLng       Float
+  pickupPoint     String?
+  pickupLat       Float?
+  pickupLng       Float?
+  
+  // Destination
+  destinationName String
+  destinationAddress String
+  destinationLat  Float
+  destinationLng  Float
+  destinationPlaceId String?
+  estimatedArrivalRadius Int @default(2000) // meters
+  
+  // Timing
+  departureTime   DateTime
+  flexibilityMinutes Int @default(15)
+  isImmediate     Boolean @default(false)
+  expiresAt       DateTime
+  
+  // Capacity
+  totalSeats      Int @default(1)
+  availableSeats  Int @default(1)
+  
+  // Cost Sharing
+  costSharingEnabled Boolean @default(true)
+  estimatedCost   Float?
+  costPerPerson   Float?
+  currency        String @default("INR")
+  
+  // Preferences
+  genderPreference GenderPreference @default(ANY)
+  maxDetourKm     Float @default(1.0)
+  allowSmoking    Boolean @default(false)
+  allowPets       Boolean @default(false)
+  
+  // Route Information
+  routeDistance   Int? // meters
+  routeDuration   Int? // seconds
+  routePolyline   String?
+  trafficCondition String?
+  
+  // Metadata
+  purpose         String?
+  tags            String[] @default([])
+  notes           String?
+  visibility      RideVisibility @default(BUILDING_ONLY)
+  
+  // Relations
+  participants    RideParticipant[]
+  matches         Match[]
+  messages        Message[]
+  ratings         Rating[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([buildingId])
+  @@index([status])
+  @@index([departureTime])
+  @@index([expiresAt])
+}
+
+model RideParticipant {
+  id          String @id @default(cuid())
+  
+  rideId      String
+  ride        Ride   @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User   @relation(fields: [userId], references: [id])
+  
+  role        ParticipantRole
+  status      ParticipantStatus @default(PENDING)
+  
+  joinedAt    DateTime @default(now())
+  confirmedAt DateTime?
+  leftAt      DateTime?
+  
+  // Cost split
+  agreedCost  Float?
+  paidAmount  Float?
+  paymentStatus PaymentStatus @default(PENDING)
+  
+  @@unique([rideId, userId])
+  @@index([rideId])
+  @@index([userId])
+  @@index([status])
+}
+
+// ============================================
+// MATCHING SYSTEM
+// ============================================
+
+model Match {
+  id          String @id @default(cuid())
+  
+  // Source Ride
+  sourceRideId String
+  sourceRide   Ride   @relation(fields: [sourceRideId], references: [id], onDelete: Cascade)
+  
+  // Target User & Ride
+  targetUserId String
+  targetRideId String?
+  
+  // Scoring
+  score        Float
+  confidence   MatchConfidence
+  
+  // Compatibility Breakdown
+  destinationProximityScore Float
+  timeAlignmentScore        Float
+  trustScoreCompatibility   Float
+  previousInteractionsScore Float
+  
+  // Distances & Times
+  destinationDistance Int  // meters
+  timeDifference      Int  // minutes
+  detourDistance      Int? // meters
+  additionalTime      Int? // minutes
+  
+  // Benefits
+  estimatedSavings Float?
+  co2Reduction     Float?
+  
+  // Status
+  status          MatchStatus @default(PENDING)
+  
+  // Metadata
+  reasons         String[] @default([])
+  
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime
+  respondedAt     DateTime?
+  
+  @@index([sourceRideId])
+  @@index([targetUserId])
+  @@index([status])
+  @@index([score])
+  @@index([createdAt])
+}
+
+// ============================================
+// COMMUNICATION
+// ============================================
+
+model Conversation {
+  id          String @id @default(cuid())
+  
+  rideId      String?
+  
+  // Participants (array of user IDs)
+  participants String[]
+  
+  // Metadata
+  lastMessageAt DateTime?
+  messageCount  Int @default(0)
+  
+  // Relations
+  messages    Message[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([rideId])
+}
+
+model Message {
+  id              String @id @default(cuid())
+  
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  rideId          String?
+  ride            Ride? @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  
+  senderId        String
+  sender          User @relation("SentMessages", fields: [senderId], references: [id])
+  
+  recipientId     String?
+  recipient       User? @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  
+  // Content
+  type            MessageType @default(TEXT)
+  content         String
+  richContent     Json?
+  
+  // Attachments
+  attachmentType  String?
+  attachmentUrl   String?
+  
+  // Status
+  deliveryStatus  DeliveryStatus @default(SENT)
+  readStatus      ReadStatus @default(UNREAD)
+  readAt          DateTime?
+  
+  // Metadata
+  isQuickReply    Boolean @default(false)
+  isSystemMessage Boolean @default(false)
+  replyToId       String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([conversationId])
+  @@index([rideId])
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([createdAt])
+}
+
+// ============================================
+// RATING & TRUST
+// ============================================
+
+model Rating {
+  id              String @id @default(cuid())
+  
+  rideId          String
+  ride            Ride @relation(fields: [rideId], references: [id])
+  
+  raterId         String
+  rater           User @relation("RaterUser", fields: [raterId], references: [id])
+  
+  ratedUserId     String
+  ratedUser       User @relation("RatedUser", fields: [ratedUserId], references: [id])
+  
+  // Overall Score
+  score           Int // 1-5
+  
+  // Detailed Aspects
+  punctuality     Int?
+  communication   Int?
+  cleanliness     Int?
+  driving         Int?
+  friendliness    Int?
+  
+  // Feedback
+  tags            String[] @default([])
+  feedback        String?
+  
+  // Metadata
+  isPublic        Boolean @default(true)
+  wouldRideAgain  Boolean @default(true)
+  addedToFavorites Boolean @default(false)
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([rideId, raterId, ratedUserId])
+  @@index([ratedUserId])
+  @@index([score])
+}
+
+// ============================================
+// LOCATION TRACKING
+// ============================================
+
+model LocationUpdate {
+  id              String @id @default(cuid())
+  
+  userId          String
+  rideId          String?
+  
+  latitude        Float
+  longitude       Float
+  accuracy        Float
+  altitude        Float?
+  bearing         Float?
+  speed           Float?
+  
+  // Status
+  isMoving        Boolean @default(false)
+  distanceToPickup Int?
+  etaToPickup     Int?
+  distanceToDestination Int?
+  etaToDestination Int?
+  
+  timestamp       DateTime @default(now())
+  batteryLevel    Int?
+  
+  @@index([userId, timestamp])
+  @@index([rideId, timestamp])
+}
+
+// ============================================
+// SAFETY & SECURITY
+// ============================================
+
+model SOSAlert {
+  id              String @id @default(cuid())
+  
+  userId          String
+  user            User @relation(fields: [userId], references: [id])
+  
+  rideId          String?
+  
+  severity        SOSSeverity
+  status          SOSStatus @default(ACTIVE)
+  
+  // Location
+  latitude        Float
+  longitude       Float
+  accuracy        Float
+  address         String?
+  
+  // Context
+  triggerMethod   String
+  rideStatus      String?
+  otherParticipants String[] @default([])
+  
+  // Notifications Sent
+  notifiedEmergencyContacts Boolean @default(false)
+  notifiedSupportTeam       Boolean @default(false)
+  notifiedParticipants      Boolean @default(false)
+  
+  // Response
+  supportChatId   String?
+  assignedAgentId String?
+  policeNotified  Boolean @default(false)
+  
+  // Resolution
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  outcome         String?
+  notes           String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+model BlockedUser {
+  id              String @id @default(cuid())
+  
+  blockerId       String
+  blockedUserId   String
+  
+  reason          String?
+  reportCategory  String?
+  details         String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([blockerId, blockedUserId])
+  @@index([blockerId])
+  @@index([blockedUserId])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id              String @id @default(cuid())
+  
+  userId          String
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type            NotificationType
+  title           String
+  body            String
+  
+  // Data Payload
+  data            Json?
+  
+  // Deep Link
+  actionUrl       String?
+  
+  // Status
+  read            Boolean @default(false)
+  readAt          DateTime?
+  
+  // Delivery
+  sentVia         String[] @default([]) // ["push", "email", "sms"]
+  delivered       Boolean @default(false)
+  deliveredAt     DateTime?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([userId, read])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============================================
+// ANALYTICS & EVENTS
+// ============================================
+
+model AnalyticsEvent {
+  id              String @id @default(cuid())
+  
+  userId          String?
+  sessionId       String
+  
+  eventType       String
+  eventName       String
+  
+  // Properties
+  properties      Json?
+  
+  // Context
+  platform        String
+  appVersion      String
+  osVersion       String
+  deviceModel     String
+  locale          String
+  timezone        String
+  networkType     String
+  
+  // Location
+  city            String?
+  state           String?
+  country         String?
+  
+  timestamp       DateTime @default(now())
+  
+  @@index([userId, timestamp])
+  @@index([eventType, timestamp])
+  @@index([sessionId])
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
+}
+
+enum GenderPreference {
+  ANY
+  SAME_GENDER
+  MALE
+  FEMALE
+}
+
+enum VerificationMethod {
+  GPS
+  MANUAL
+  ADMIN_VERIFIED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+  DELETED
+}
+
+enum ProfileVisibility {
+  PUBLIC
+  BUILDING_ONLY
+  LOCALITY_ONLY
+  PRIVATE
+}
+
+enum BuildingType {
+  APARTMENT
+  GATED_COMMUNITY
+  PG_HOSTEL
+  INDEPENDENT_HOUSE
+  COMMERCIAL
+  MIXED_USE
+}
+
+enum RideType {
+  OWN_CAR
+  SHARED_CAB
+  PUBLIC_TRANSPORT
+  WALKING
+  CYCLING
+  TWO_WHEELER
+}
+
+enum RideStatus {
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum RideVisibility {
+  BUILDING_ONLY
+  LOCALITY
+  EXTENDED_NETWORK
+}
+
+enum ParticipantRole {
+  DRIVER
+  PASSENGER
+  CO_PASSENGER
+}
+
+enum ParticipantStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  LEFT
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  DECLINED
+  REFUNDED
+}
+
+enum MatchConfidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum MessageType {
+  TEXT
+  LOCATION
+  QUICK_REPLY
+  SYSTEM
+}
+
+enum DeliveryStatus {
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum ReadStatus {
+  UNREAD
+  READ
+}
+
+enum SOSSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+}
+
+enum SOSStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  FALSE_ALARM
+}
+
+enum NotificationType {
+  MATCH_FOUND
+  MESSAGE_RECEIVED
+  RIDE_REMINDER
+  RIDE_STARTED
+  RIDE_COMPLETED
+  RATING_REQUEST
+  SOS_ALERT
+  SYSTEM_ANNOUNCEMENT
+}

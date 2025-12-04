@@ -1,0 +1,60 @@
+{
+    "expo": {
+        "name": "ShareTaxi",
+        "slug": "sharetaxi",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/icon.png",
+        "userInterfaceStyle": "light",
+        "splash": {
+            "image": "./assets/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#0ea5e9"
+        },
+        "assetBundlePatterns": [
+            "**/*"
+        ],
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.sharetaxi.app",
+            "infoPlist": {
+                "NSLocationWhenInUseUsageDescription": "ShareTaxi needs your location to match you with neighbors going to the same destination.",
+                "NSLocationAlwaysUsageDescription": "ShareTaxi needs your location to match you with neighbors going to the same destination."
+            }
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/adaptive-icon.png",
+                "backgroundColor": "#0ea5e9"
+            },
+            "package": "com.sharetaxi.app",
+            "permissions": [
+                "ACCESS_FINE_LOCATION",
+                "ACCESS_COARSE_LOCATION"
+            ],
+            "config": {
+                "googleMaps": {
+                    "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+                }
+            }
+        },
+        "web": {
+            "favicon": "./assets/favicon.png"
+        },
+        "plugins": [
+            "expo-router",
+            [
+                "expo-location",
+                {
+                    "locationAlwaysAndWhenInUsePermission": "Allow ShareTaxi to use your location to match you with neighbors."
+                }
+            ]
+        ],
+        "scheme": "sharetaxi",
+        "extra": {
+            "router": {
+                "origin": false
+            }
+        }
+    }
+}
