@@ -240,29 +240,4 @@ export default async function ProfilePage() {
                                         <span className="font-semibold">{user.preferences.petsAllowed ? 'Allowed' : 'Not Allowed'}</span>
                                     </div>
                                 </>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Emergency Contacts */}
-                    {user.emergencyContacts && user.emergencyContacts.length > 0 && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Emergency Contacts</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2">
-                                {user.emergencyContacts.map((contact: any) => (
-                                    <div key={contact.id} className="p-3 bg-muted rounded-lg">
-                                        <p className="font-semibold">{contact.name}</p>
-                                        <p className="text-sm text-muted-foreground">{contact.relationship}</p>
-                                        <p className="text-sm">{contact.phoneNumber}</p>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
-            </div>
-        </div>
-    )
 }
