@@ -5,7 +5,22 @@ import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
-            </body >
-        </html >
+export const metadata: Metadata = {
+    title: "ShareTaxi - Hyper-Local Ride Sharing",
+    description: "Connect with neighbors, share rides, save money and reduce carbon emissions",
+};
+
+export default function RootLayout({
+    children,
+}: Readonly<{
+    children: React.ReactNode;
+}>) {
+    return (
+        <html lang="en">
+            <body className={inter.className}>
+                {children}
+                <Toaster position="top-center" richColors />
+            </body>
+        </html>
     );
 }
