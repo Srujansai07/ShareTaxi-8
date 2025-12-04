@@ -98,19 +98,6 @@ export default async function RideDetailsPage({ params }: { params: { id: string
                                 </div>
 
                                 <Badge className={getStatusColor(ride.status)}>
-                                    {ride.status}
-                                </Badge>
-                            </div>
-                        </CardHeader>
-
-                        <CardContent className="space-y-4">
-                            {/* Destination */}
-                            <div className="flex items-start gap-3 p-4 bg-muted rounded-lg">
-                                <MapPin className="h-6 w-6 text-primary mt-1" />
-                                <div className="flex-1">
-                                    <p className="font-semibold text-lg">{ride.destinationName}</p>
-                                    <p className="text-sm text-muted-foreground">{ride.building.name}</p>
-                                </div>
                             </div>
 
                             {/* Timing */}
@@ -198,31 +185,16 @@ export default async function RideDetailsPage({ params }: { params: { id: string
                         </CardContent>
                     </Card>
                 </div>
-
-                {/* Sidebar - Matches */}
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Potential Matches</CardTitle>
-                            <CardDescription>
-                                {matches.length} neighbors going the same way
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {matches.length > 0 ? (
-                                matches.map((match: any) => (
-                                    <MatchCard key={match.id} match={match} />
-                                ))
-                            ) : (
-                                <div className="text-center py-8">
-                                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                                    <p className="text-sm text-muted-foreground">No matches yet</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                ) : (
+                <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No matches yet</p>
                 </div>
-            </div>
-        </div>
+                            )}
+            </CardContent>
+        </Card>
+                </div >
+            </div >
+        </div >
     )
 }
