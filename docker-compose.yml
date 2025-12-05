@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+    depends_on:
+      - db
+    networks:
+      - sharetaxi-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=sharetaxi
+      - POSTGRES_PASSWORD=sharetaxi
+      - POSTGRES_DB=sharetaxi
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - sharetaxi-network
+
+networks:
+  sharetaxi-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
