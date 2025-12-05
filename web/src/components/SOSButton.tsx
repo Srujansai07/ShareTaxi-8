@@ -1,103 +1,174 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle } from 'lucide-react'
-import { triggerSOS } from '@/app/actions/safety'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import { AlertTriangle, MapPin, Loader2 } from 'lucide-react'
+import { triggerSOS, resolveSOS } from '@/app/actions/sos'
 import { toast } from 'sonner'
 
 interface SOSButtonProps {
-    rideId?: string
-    className?: string
+    rideId: string
+    activeSosId?: string | null
 }
 
-export function SOSButton({ rideId, className }: SOSButtonProps) {
-    const [isPressed, setIsPressed] = useState(false)
-    const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null)
+export function SOSButton({ rideId, activeSosId }: SOSButtonProps) {
+    const [isTriggering, setIsTriggering] = useState(false)
+    const [showConfirm, setShowConfirm] = useState(false)
+    const [message, setMessage] = useState('')
+    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
 
-    const handleMouseDown = () => {
-        setIsPressed(true)
-        const timer = setTimeout(async () => {
-            // Trigger SOS after 3 seconds
-            await handleSOS()
-        }, 3000)
-        setPressTimer(timer)
+    const getLocation = () => {
+        return new Promise<{ latitude: number; longitude: number }>((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation not supported'))
+                return
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    })
+                },
+                (error) => reject(error),
+                { enableHighAccuracy: true, timeout: 10000 }
+            )
+        })
     }
 
-    const handleMouseUp = () => {
-        setIsPressed(false)
-        if (pressTimer) {
-            clearTimeout(pressTimer)
-            setPressTimer(null)
+    const handleTriggerSOS = async () => {
+        try {
+            setIsTriggering(true)
+
+            // Get current location
+            const currentLocation = await getLocation()
+            setLocation(currentLocation)
+
+            const formData = new FormData()
+            formData.append('rideId', rideId)
+            formData.append('location', JSON.stringify(currentLocation))
+            if (message.trim()) {
+                formData.append('message', message.trim())
+            }
+
+            const result = await triggerSOS(formData)
+
+            if (result.success) {
+                toast.success('SOS alert sent to all participants and emergency contacts!')
+                setShowConfirm(false)
+                setMessage('')
+            } else {
+                toast.error(result.error || 'Failed to send SOS alert')
+            }
+        } catch (error) {
+            toast.error('Failed to get location. Please enable location services.')
+        } finally {
+            setIsTriggering(false)
         }
     }
 
-    const handleSOS = async () => {
-        // Get current location
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const formData = new FormData()
-                if (rideId) {
-                    formData.append('rideId', rideId)
-                }
-                formData.append('latitude', position.coords.latitude.toString())
-                formData.append('longitude', position.coords.longitude.toString())
-                formData.append('accuracy', position.coords.accuracy.toString())
+    const handleResolveSOS = async () => {
+        if (!activeSosId) return
 
-                const result = await triggerSOS(formData)
+        const result = await resolveSOS(activeSosId)
 
-                if (result.success) {
-                    toast.success('Emergency contacts have been notified!')
-                } else {
-                    toast.error(result.error || 'Failed to send SOS')
-                }
-            }, (error) => {
-                toast.error('Could not get your location. Please enable location services.')
-            })
+        if (result.success) {
+            toast.success('SOS alert resolved')
         } else {
-            toast.error('Geolocation is not supported by your browser')
+            toast.error(result.error || 'Failed to resolve SOS alert')
         }
+    }
+
+    if (activeSosId) {
+        return (
+            <Card className="border-red-500 bg-red-50">
+                <CardHeader>
+                    <CardTitle className="text-red-600 flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        SOS Alert Active
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-red-600 mb-4">
+                        Emergency alert is active. All participants and emergency contacts have been notified.
+                    </p>
+                    <Button onClick={handleResolveSOS} variant="outline" className="w-full">
+                        Mark as Resolved
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    if (showConfirm) {
+        return (
+            <Card className="border-orange-500">
+                <CardHeader>
+                    <CardTitle className="text-orange-600 flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        Confirm SOS Alert
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                        This will send an emergency alert to all ride participants and your emergency contacts with your current location.
+                    </p>
+
+                    <Textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Optional message (e.g., 'Need immediate help')"
+                        maxLength={500}
+                        rows={3}
+                    />
+
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={handleTriggerSOS}
+                            disabled={isTriggering}
+                            variant="destructive"
+                            className="flex-1"
+                        >
+                            {isTriggering ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Sending Alert...
+                                </>
+                            ) : (
+                                <>
+                                    <AlertTriangle className="h-4 w-4 mr-2" />
+                                    Send SOS Alert
+                                </>
+                            )}
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setShowConfirm(false)
+                                setMessage('')
+                            }}
+                            variant="outline"
+                            disabled={isTriggering}
+                        >
+                            Cancel
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        )
     }
 
     return (
         <Button
+            onClick={() => setShowConfirm(true)}
             variant="destructive"
+            className="w-full"
             size="lg"
-            className={`relative ${className}`}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleMouseDown}
-            onTouchEnd={handleMouseUp}
         >
             <AlertTriangle className="h-5 w-5 mr-2" />
-            {isPressed ? 'Hold to Activate...' : 'SOS Emergency'}
-            {isPressed && (
-                <div className="absolute inset-0 bg-red-600 opacity-50 animate-pulse rounded-md" />
-            )}
+            SOS Emergency Alert
         </Button>
-    )
-}
-
-export function SOSCard() {
-    return (
-        <Card className="border-red-200 bg-red-50">
-            <CardHeader>
-                <CardTitle className="text-red-900 flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    Emergency SOS
-                </CardTitle>
-                <CardDescription className="text-red-700">
-                    Hold the button for 3 seconds to activate emergency alert
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <SOSButton className="w-full" />
-                <p className="text-xs text-red-700 mt-4">
-                    This will immediately notify your emergency contacts and our support team with your current location.
-                </p>
-            </CardContent>
-        </Card>
     )
 }

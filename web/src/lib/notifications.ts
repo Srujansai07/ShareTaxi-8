@@ -1,58 +1,59 @@
-/**
- * Send push notification to a user
- * @param userId User ID to send notification to
- * @param notification Notification data
- */
-export async function sendPushNotification(
-    userId: string,
-    notification: {
-        title: string
-        body: string
-        data?: Record<string, any>
-    }
-) {
-    try {
-        // TODO: Implement Firebase Cloud Messaging
-        // For now, just log
-        console.log(`Sending notification to ${userId}:`, notification)
+// Push notification utilities using Firebase Cloud Messaging (FCM)
 
-        // In production, this would call FCM API
+interface PushNotificationData {
+    title: string
+    body: string
+    data?: Record<string, string>
+    priority?: 'normal' | 'high'
+}
+
+export async function sendPushNotification(userId: string, notification: PushNotificationData) {
+    try {
+        // In production, this would use FCM server key to send notifications
+        // For now, we'll log the notification
+        console.log(`Push notification to user ${userId}:`, notification)
+
+        // TODO: Implement actual FCM integration
+        // const FCM_SERVER_KEY = process.env.FCM_SERVER_KEY
         // const response = await fetch('https://fcm.googleapis.com/fcm/send', {
         //   method: 'POST',
         //   headers: {
-        //     'Authorization': `key=${process.env.FCM_SERVER_KEY}`,
         //     'Content-Type': 'application/json',
+        //     'Authorization': `key=${FCM_SERVER_KEY}`
         //   },
         //   body: JSON.stringify({
-        //     to: userFCMToken,
+        //     to: userFcmToken,
         //     notification: {
         //       title: notification.title,
-        //       body: notification.body,
+        //       body: notification.body
         //     },
         //     data: notification.data,
-        //   }),
+        //     priority: notification.priority || 'normal'
+        //   })
         // })
 
         return { success: true }
     } catch (error) {
-        console.error('Failed to send push notification:', error)
-        return { success: false, error }
+        console.error('Send push notification error:', error)
+        return { success: false, error: 'Failed to send notification' }
     }
 }
 
-/**
- * Send SMS notification
- * @param phoneNumber Phone number to send to
- * @param message Message content
- */
-export async function sendSMS(phoneNumber: string, message: string) {
+export async function registerFCMToken(userId: string, token: string) {
     try {
-        // TODO: Implement Twilio SMS
-        console.log(`Sending SMS to ${phoneNumber}:`, message)
+        // Store FCM token in database for the user
+        // This would be called from the client when they grant notification permission
+        console.log(`Registering FCM token for user ${userId}:`, token)
+
+        // TODO: Store in database
+        // await prisma.user.update({
+        //   where: { id: userId },
+        //   data: { fcmToken: token }
+        // })
 
         return { success: true }
     } catch (error) {
-        console.error('Failed to send SMS:', error)
-        return { success: false, error }
+        console.error('Register FCM token error:', error)
+        return { success: false, error: 'Failed to register token' }
     }
 }
