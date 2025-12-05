@@ -1,37 +1,15 @@
-'use client'
-
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MapPin, Clock, Users, DollarSign, Navigation } from 'lucide-react'
-import { formatDate, formatCurrency, getInitials } from '@/lib/utils'
-import { useRouter } from 'next/navigation'
+import { Badge } from '@/components/ui/badge'
+import { MapPin, Clock, Users, DollarSign, Star } from 'lucide-react'
+import { formatDate, formatCurrency } from '@/lib/utils'
 
 interface RideCardProps {
-    ride: {
-        id: string
-        destinationName: string
-        departureTime: Date | string
-        type: string
-        availableSeats: number
-        costPerPerson?: number
-        status: string
-        user: {
-            displayName: string
-            photoUrl?: string
-            trustScore: number
-        }
-        building: {
-            name: string
-            area: string
-        }
-    }
-    showActions?: boolean
+    ride: any
 }
 
-export function RideCard({ ride, showActions = true }: RideCardProps) {
-    const router = useRouter()
-
+export function RideCard({ ride }: RideCardProps) {
     const getRideTypeIcon = (type: string) => {
         const icons: Record<string, string> = {
             OWN_CAR: '🚗',
@@ -55,86 +33,58 @@ export function RideCard({ ride, showActions = true }: RideCardProps) {
     }
 
     return (
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(`/rides/${ride.id}`)}>
-            <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                        {/* User Avatar */}
-                        <div className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold">
-                            {ride.user.photoUrl ? (
-                                <img src={ride.user.photoUrl} alt={ride.user.displayName} className="h-12 w-12 rounded-full object-cover" />
-                            ) : (
-                                getInitials(ride.user.displayName)
-                            )}
+        <Link href={`/rides/${ride.id}`}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader>
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="text-2xl">{getRideTypeIcon(ride.type)}</span>
+                            <div>
+                                <CardTitle className="text-lg">{ride.destinationName}</CardTitle>
+                                <CardDescription className="text-sm">
+                                    {ride.building?.name}
+                                </CardDescription>
+                            </div>
                         </div>
-
-                        <div>
-                            <p className="font-semibold">{ride.user.displayName}</p>
-                            <p className="text-sm text-muted-foreground">
-                                ⭐ {ride.user.trustScore.toFixed(1)} • {ride.building.name}
-                            </p>
-                        </div>
+                        <Badge className={getStatusColor(ride.status)}>
+                            {ride.status}
+                        </Badge>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>{formatDate(ride.departureTime)}</span>
                     </div>
 
-                    <Badge className={getStatusColor(ride.status)}>
-                        {ride.status}
-                    </Badge>
-                </div>
-            </CardHeader>
-
-            <CardContent className="space-y-3">
-                {/* Destination */}
-                <div className="flex items-start gap-2">
-                    <MapPin className="h-5 w-5 text-primary mt-0.5" />
-                    <div>
-                        <p className="font-medium">{ride.destinationName}</p>
-                        <p className="text-sm text-muted-foreground">{ride.building.area}</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        <span>{ride.availableSeats} seats available</span>
                     </div>
-                </div>
-
-                {/* Departure Time */}
-                <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{formatDate(ride.departureTime)}</span>
-                </div>
-
-                {/* Details */}
-                <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                        <span className="text-lg">{getRideTypeIcon(ride.type)}</span>
-                        <span className="text-muted-foreground">{ride.type.replace('_', ' ')}</span>
-                    </div>
-
-                    {ride.availableSeats > 0 && (
-                        <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span>{ride.availableSeats} seats</span>
-                        </div>
-                    )}
 
                     {ride.costPerPerson && (
-                        <div className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            <span>{formatCurrency(ride.costPerPerson)}</span>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <DollarSign className="h-4 w-4" />
+                            <span>{formatCurrency(ride.costPerPerson)} per person</span>
                         </div>
                     )}
-                </div>
-            </CardContent>
 
-            {showActions && ride.status === 'ACTIVE' && (
-                <CardFooter>
-                    <Button
-                        className="w-full"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            router.push(`/rides/${ride.id}`)
-                        }}
-                    >
-                        <Navigation className="h-4 w-4 mr-2" />
-                        View Details
-                    </Button>
-                </CardFooter>
-            )}
-        </Card>
+                    {ride.user && (
+                        <div className="flex items-center gap-2 pt-2 border-t">
+                            <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+                                {ride.user.displayName?.[0]}
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-sm font-medium">{ride.user.displayName}</p>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                    <span>{ride.user.trustScore?.toFixed(1) || '5.0'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </Link>
     )
 }
