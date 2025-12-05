@@ -3,14 +3,12 @@
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
 import { sendPushNotification } from '@/lib/notifications'
 
-const sendMessageSchema = z.object({
-    conversationId: z.string().optional(),
-    rideId: z.string().optional(),
-    recipientId: z.string(),
-    content: z.string().min(1).max(500),
-    type: z.enum(['TEXT', 'LOCATION', 'QUICK_REPLY']).default('TEXT')
+const messageSchema = z.object({
+    rideId: z.string(),
+    content: z.string().min(1).max(1000)
 })
 
 export async function sendMessage(formData: FormData) {
@@ -28,84 +26,60 @@ export async function sendMessage(formData: FormData) {
             return { success: false, error: 'User not found' }
         }
 
-        const rawData = {
-            conversationId: formData.get('conversationId') || undefined,
-            rideId: formData.get('rideId') || undefined,
-            recipientId: formData.get('recipientId'),
-            content: formData.get('content'),
-            type: formData.get('type') || 'TEXT'
-        }
+        const validated = messageSchema.parse({
+            rideId: formData.get('rideId'),
+            content: formData.get('content')
+        })
 
-        const validated = sendMessageSchema.parse(rawData)
-
-        // Find or create conversation
-        let conversationId = validated.conversationId
-
-        if (!conversationId) {
-            const existingConversation = await prisma.conversation.findFirst({
-                where: {
-                    rideId: validated.rideId,
-                    participants: {
-                        hasEvery: [user.id, validated.recipientId]
+        // Verify user is part of the ride
+        const participant = await prisma.rideParticipant.findFirst({
+            where: {
+                rideId: validated.rideId,
+                userId: user.id,
+                status: { in: ['CONFIRMED', 'COMPLETED'] }
+            },
+            include: {
+                ride: {
+                    include: {
+                        participants: {
+                            where: {
+                                userId: { not: user.id },
+                                status: { in: ['CONFIRMED', 'COMPLETED'] }
+                            }
+                        }
                     }
                 }
-            })
-
-            if (existingConversation) {
-                conversationId = existingConversation.id
-            } else {
-                const newConversation = await prisma.conversation.create({
-                    data: {
-                        rideId: validated.rideId,
-                        participants: [user.id, validated.recipientId]
-                    }
-                })
-                conversationId = newConversation.id
             }
+        })
+
+        if (!participant) {
+            return { success: false, error: 'Not authorized to send messages in this ride' }
         }
 
         // Create message
         const message = await prisma.message.create({
             data: {
-                conversationId,
                 rideId: validated.rideId,
                 senderId: user.id,
-                recipientId: validated.recipientId,
                 content: validated.content,
-                type: validated.type as any,
-                deliveryStatus: 'DELIVERED'
-            },
-            include: {
-                sender: {
-                    select: {
-                        id: true,
-                        displayName: true,
-                        photoUrl: true
-                    }
+                type: 'TEXT'
+            }
+        })
+
+        // Notify other participants
+        for (const otherParticipant of participant.ride.participants) {
+            await sendPushNotification(otherParticipant.userId, {
+                title: `New message from ${user.displayName}`,
+                body: validated.content.substring(0, 100),
+                data: {
+                    rideId: validated.rideId,
+                    messageId: message.id,
+                    type: 'new_message'
                 }
-            }
-        })
+            })
+        }
 
-        // Update conversation
-        await prisma.conversation.update({
-            where: { id: conversationId },
-            data: {
-                lastMessageAt: new Date(),
-                messageCount: { increment: 1 }
-            }
-        })
-
-        // Send push notification
-        await sendPushNotification(validated.recipientId, {
-            title: `New message from ${message.sender.displayName}`,
-            body: validated.content.substring(0, 100),
-            data: {
-                messageId: message.id,
-                conversationId,
-                rideId: validated.rideId,
-                type: 'new_message'
-            }
-        })
+        revalidatePath(`/rides/${validated.rideId}`)
 
         return { success: true, message }
     } catch (error) {
@@ -117,7 +91,7 @@ export async function sendMessage(formData: FormData) {
     }
 }
 
-export async function getConversationMessages(conversationId: string) {
+export async function getMessages(rideId: string) {
     try {
         const session = await getServerSession()
         if (!session?.user) {
@@ -132,16 +106,20 @@ export async function getConversationMessages(conversationId: string) {
             return { success: false, error: 'User not found' }
         }
 
-        const conversation = await prisma.conversation.findUnique({
-            where: { id: conversationId }
+        // Verify user is part of the ride
+        const participant = await prisma.rideParticipant.findFirst({
+            where: {
+                rideId: rideId,
+                userId: user.id
+            }
         })
 
-        if (!conversation || !conversation.participants.includes(user.id)) {
+        if (!participant) {
             return { success: false, error: 'Not authorized' }
         }
 
         const messages = await prisma.message.findMany({
-            where: { conversationId },
+            where: { rideId },
             include: {
                 sender: {
                     select: {
@@ -154,93 +132,9 @@ export async function getConversationMessages(conversationId: string) {
             orderBy: { createdAt: 'asc' }
         })
 
-        // Mark messages as read
-        await prisma.message.updateMany({
-            where: {
-                conversationId,
-                recipientId: user.id,
-                readStatus: 'UNREAD'
-            },
-            data: {
-                readStatus: 'READ',
-                readAt: new Date()
-            }
-        })
-
         return { success: true, messages }
     } catch (error) {
         console.error('Get messages error:', error)
         return { success: false, error: 'Failed to fetch messages' }
-    }
-}
-
-export async function getRideConversations(rideId: string) {
-    try {
-        const session = await getServerSession()
-        if (!session?.user) {
-            return { success: false, error: 'Not authenticated' }
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { phoneNumber: session.user.phone! }
-        })
-
-        if (!user) {
-            return { success: false, error: 'User not found' }
-        }
-
-        const conversations = await prisma.conversation.findMany({
-            where: {
-                rideId,
-                participants: {
-                    has: user.id
-                }
-            },
-            include: {
-                messages: {
-                    orderBy: { createdAt: 'desc' },
-                    take: 1
-                }
-            },
-            orderBy: { lastMessageAt: 'desc' }
-        })
-
-        return { success: true, conversations }
-    } catch (error) {
-        console.error('Get ride conversations error:', error)
-        return { success: false, error: 'Failed to fetch conversations' }
-    }
-}
-
-export async function markMessageAsRead(messageId: string) {
-    try {
-        const session = await getServerSession()
-        if (!session?.user) {
-            return { success: false, error: 'Not authenticated' }
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { phoneNumber: session.user.phone! }
-        })
-
-        if (!user) {
-            return { success: false, error: 'User not found' }
-        }
-
-        await prisma.message.update({
-            where: {
-                id: messageId,
-                recipientId: user.id
-            },
-            data: {
-                readStatus: 'READ',
-                readAt: new Date()
-            }
-        })
-
-        return { success: true }
-    } catch (error) {
-        console.error('Mark as read error:', error)
-        return { success: false, error: 'Failed to mark as read' }
     }
 }
