@@ -223,14 +223,6 @@ export async function getMatches(rideId: string) {
                 expiresAt: { gt: new Date() }
             },
             include: {
-                ride: {
-                    select: {
-                        id: true,
-                        destinationName: true,
-                        departureTime: true,
-                        type: true
-                    }
-                },
                 user: {
                     select: {
                         id: true,
