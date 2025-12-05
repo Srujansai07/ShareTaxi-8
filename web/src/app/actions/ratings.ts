@@ -3,19 +3,13 @@
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
 
-const submitRatingSchema = z.object({
+const ratingSchema = z.object({
     rideId: z.string(),
     ratedUserId: z.string(),
-    score: z.number().min(1).max(5),
-    punctuality: z.number().min(1).max(5).optional(),
-    communication: z.number().min(1).max(5).optional(),
-    cleanliness: z.number().min(1).max(5).optional(),
-    driving: z.number().min(1).max(5).optional(),
-    friendliness: z.number().min(1).max(5).optional(),
-    tags: z.array(z.string()).default([]),
-    feedback: z.string().optional(),
-    wouldRideAgain: z.boolean().default(true)
+    rating: z.number().min(1).max(5),
+    review: z.string().max(500).optional()
 })
 
 export async function submitRating(formData: FormData) {
@@ -33,35 +27,42 @@ export async function submitRating(formData: FormData) {
             return { success: false, error: 'User not found' }
         }
 
-        const rawData = {
+        const validated = ratingSchema.parse({
             rideId: formData.get('rideId'),
             ratedUserId: formData.get('ratedUserId'),
-            score: parseInt(formData.get('score') as string),
-            punctuality: formData.get('punctuality') ? parseInt(formData.get('punctuality') as string) : undefined,
-            communication: formData.get('communication') ? parseInt(formData.get('communication') as string) : undefined,
-            cleanliness: formData.get('cleanliness') ? parseInt(formData.get('cleanliness') as string) : undefined,
-            driving: formData.get('driving') ? parseInt(formData.get('driving') as string) : undefined,
-            friendliness: formData.get('friendliness') ? parseInt(formData.get('friendliness') as string) : undefined,
-            tags: formData.get('tags') ? JSON.parse(formData.get('tags') as string) : [],
-            feedback: formData.get('feedback') || undefined,
-            wouldRideAgain: formData.get('wouldRideAgain') === 'true'
-        }
-
-        const validated = submitRatingSchema.parse(rawData)
-
-        // Check if ride exists and user was participant
-        const ride = await prisma.ride.findUnique({
-            where: { id: validated.rideId },
-            include: { participants: true }
+            rating: Number(formData.get('rating')),
+            review: formData.get('review') || undefined
         })
 
-        if (!ride) {
-            return { success: false, error: 'Ride not found' }
+        // Check if ride is completed
+        const ride = await prisma.ride.findUnique({
+            where: { id: validated.rideId },
+            include: {
+                participants: {
+                    where: { userId: user.id }
+                }
+            }
+        })
+
+        if (!ride || ride.status !== 'COMPLETED') {
+            return { success: false, error: 'Can only rate completed rides' }
         }
 
-        const isParticipant = ride.participants.some(p => p.userId === user.id)
-        if (!isParticipant) {
-            return { success: false, error: 'Not a participant of this ride' }
+        if (ride.participants.length === 0) {
+            return { success: false, error: 'You were not part of this ride' }
+        }
+
+        // Check if already rated
+        const existingRating = await prisma.rating.findFirst({
+            where: {
+                rideId: validated.rideId,
+                raterId: user.id,
+                ratedUserId: validated.ratedUserId
+            }
+        })
+
+        if (existingRating) {
+            return { success: false, error: 'You have already rated this user for this ride' }
         }
 
         // Create rating
@@ -70,29 +71,26 @@ export async function submitRating(formData: FormData) {
                 rideId: validated.rideId,
                 raterId: user.id,
                 ratedUserId: validated.ratedUserId,
-                score: validated.score,
-                punctuality: validated.punctuality,
-                communication: validated.communication,
-                cleanliness: validated.cleanliness,
-                driving: validated.driving,
-                friendliness: validated.friendliness,
-                tags: validated.tags,
-                feedback: validated.feedback,
-                wouldRideAgain: validated.wouldRideAgain
+                rating: validated.rating,
+                review: validated.review
             }
         })
 
         // Update rated user's trust score
-        const ratings = await prisma.rating.findMany({
-            where: { ratedUserId: validated.ratedUserId }
+        const userRatings = await prisma.rating.findMany({
+            where: { ratedUserId: validated.ratedUserId },
+            select: { rating: true }
         })
 
-        const averageScore = ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length
+        const avgRating = userRatings.reduce((sum, r) => sum + r.rating, 0) / userRatings.length
+        const trustScore = Math.round(avgRating * 20) // Convert 1-5 to 20-100
 
         await prisma.user.update({
             where: { id: validated.ratedUserId },
-            data: { trustScore: averageScore }
+            data: { trustScore }
         })
+
+        revalidatePath(`/rides/${validated.rideId}`)
 
         return { success: true, rating }
     } catch (error) {
@@ -104,10 +102,10 @@ export async function submitRating(formData: FormData) {
     }
 }
 
-export async function getUserRatings(userId: string) {
+export async function getRatingsForUser(userId: string) {
     try {
         const ratings = await prisma.rating.findMany({
-            where: { ratedUserId: userId, isPublic: true },
+            where: { ratedUserId: userId },
             include: {
                 rater: {
                     select: {
@@ -118,7 +116,7 @@ export async function getUserRatings(userId: string) {
                 ride: {
                     select: {
                         destinationName: true,
-                        createdAt: true
+                        departureTime: true
                     }
                 }
             },
@@ -126,9 +124,13 @@ export async function getUserRatings(userId: string) {
             take: 10
         })
 
-        return { success: true, ratings }
+        const avgRating = ratings.length > 0
+            ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+            : 0
+
+        return { success: true, ratings, avgRating, totalRatings: ratings.length }
     } catch (error) {
-        console.error('Get user ratings error:', error)
+        console.error('Get ratings error:', error)
         return { success: false, error: 'Failed to fetch ratings' }
     }
 }
