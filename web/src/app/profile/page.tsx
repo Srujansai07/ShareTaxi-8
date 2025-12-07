@@ -44,7 +44,7 @@ export default async function ProfilePage() {
                             {user.displayName || 'User'}
                         </h1>
                         <p className="text-slate-500 dark:text-slate-400 mb-6">
-                            {user.phoneNumber}
+                            {user.phone}
                         </p>
 
                         {/* Stats */}
