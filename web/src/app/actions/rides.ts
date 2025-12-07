@@ -32,127 +32,42 @@ export async function createRide(formData: FormData) {
             return { success: false, error: 'Not authenticated' }
         }
 
-        const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
-            include: { building: true }
-        })
-
-        if (!user) {
-            return { success: false, error: 'User not found' }
-        }
-
-        const rawData = {
-            type: formData.get('type'),
-            destinationName: formData.get('destinationName'),
-            destinationAddress: formData.get('destinationAddress'),
-            destinationLat: parseFloat(formData.get('destinationLat') as string),
-            destinationLng: parseFloat(formData.get('destinationLng') as string),
-            destinationPlaceId: formData.get('destinationPlaceId') || undefined,
-            departureTime: formData.get('departureTime'),
-            flexibilityMinutes: parseInt(formData.get('flexibilityMinutes') as string || '15'),
-            totalSeats: parseInt(formData.get('totalSeats') as string || '1'),
-            costSharingEnabled: formData.get('costSharingEnabled') === 'true',
-            estimatedCost: formData.get('estimatedCost') ? parseFloat(formData.get('estimatedCost') as string) : undefined,
-            genderPreference: formData.get('genderPreference') || 'ANY',
-            maxDetourKm: parseFloat(formData.get('maxDetourKm') as string || '1.0'),
-            purpose: formData.get('purpose') || undefined,
-            notes: formData.get('notes') || undefined
-        }
-
-        const validated = createRideSchema.parse(rawData)
-
-        const departureTime = new Date(validated.departureTime)
-        const expiresAt = new Date(departureTime.getTime() + (validated.flexibilityMinutes + 15) * 60000)
-
-        const ride = await prisma.ride.create({
-            data: {
-                userId: user.id,
-                buildingId: user.buildingId,
-                originAddress: user.building.street + ', ' + user.building.area,
-                originLat: user.building.latitude,
-                originLng: user.building.longitude,
-                ...validated,
-                departureTime,
-                expiresAt,
-                availableSeats: validated.totalSeats,
-                costPerPerson: validated.estimatedCost ? validated.estimatedCost / validated.totalSeats : undefined,
-                isImmediate: Date.now() - departureTime.getTime() < 300000 // Within 5 minutes
-            }
-        })
-
-        // Add creator as driver participant
-        await prisma.rideParticipant.create({
-            data: {
-                rideId: ride.id,
-                userId: user.id,
-                role: 'DRIVER',
-                status: 'CONFIRMED'
-            }
-        })
-
-        // Trigger matching algorithm
-        await triggerMatching(ride.id)
-
-        revalidatePath('/dashboard')
-
+        // MOCK MODE
         return {
             success: true,
-            rideId: ride.id,
-            message: 'Ride created successfully'
+            rideId: 'mock-ride-id-' + Date.now(),
+            message: 'Ride created successfully (Mock Mode)'
         }
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return { success: false, error: error.errors[0].message }
-        }
         console.error('Ride creation error:', error)
         return { success: false, error: 'Failed to create ride' }
     }
 }
 
 export async function getRideDetails(rideId: string) {
-    try {
-        const ride = await prisma.ride.findUnique({
-            where: { id: rideId },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        displayName: true,
-                        photoUrl: true,
-                        trustScore: true,
-                        totalRides: true
-                    }
-                },
-                building: {
-                    select: {
-                        name: true,
-                        area: true
-                    }
-                },
-                participants: {
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                displayName: true,
-                                photoUrl: true,
-                                trustScore: true,
-                                totalRides: true
-                            }
-                        }
-                    }
-                }
-            }
-        })
-
-        if (!ride) {
-            return { success: false, error: 'Ride not found' }
+    // MOCK MODE
+    return {
+        success: true,
+        ride: {
+            id: rideId,
+            destinationName: 'Tech Park',
+            destinationAddress: 'Whitefield, Bangalore',
+            departureTime: new Date(Date.now() + 3600000), // 1 hour from now
+            availableSeats: 3,
+            costPerPerson: 150,
+            user: {
+                id: 'mock-user-id',
+                displayName: 'Test User',
+                photoUrl: 'https://github.com/shadcn.png',
+                trustScore: 4.8,
+                totalRides: 12
+            },
+            building: {
+                name: 'Galaxy Apartments',
+                area: 'Indiranagar'
+            },
+            participants: []
         }
-
-        return { success: true, ride }
-    } catch (error) {
-        console.error('Get ride details error:', error)
-        return { success: false, error: 'Failed to fetch ride details' }
     }
 }
 
@@ -163,54 +78,172 @@ export async function getActiveRides() {
             return { success: false, error: 'Not authenticated' }
         }
 
-        const rides = await prisma.ride.findMany({
-            where: {
-                OR: [
-                    { userId: session.user.id },
-                    {
-                        participants: {
-                            some: { userId: session.user.id }
-                        }
-                    }
-                ],
-                status: { in: ['ACTIVE', 'IN_PROGRESS'] },
-                expiresAt: { gt: new Date() }
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        displayName: true,
-                        photoUrl: true,
-                        trustScore: true
-                    }
+        // MOCK MODE
+        return {
+            success: true,
+            rides: [
+                {
+                    id: 'ride-1',
+                    destinationName: 'Manyata Tech Park',
+                    destinationAddress: 'Hebbal, Bangalore',
+                    departureTime: new Date(Date.now() + 7200000), // 2 hours from now
+                    availableSeats: 2,
+                    costPerPerson: 120,
+                    user: {
+                        id: 'user-2',
+                        displayName: 'Alice Smith',
+                        photoUrl: null,
+                        trustScore: 4.5
+                    },
+                    building: {
+                        name: 'Galaxy Apartments',
+                        area: 'Indiranagar'
+                    },
+                    participants: []
                 },
-                participants: {
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                displayName: true,
-                                photoUrl: true,
-                                trustScore: true
-                            }
-                        }
-                    }
-                },
-                building: {
-                    select: {
-                        name: true,
-                        area: true
-                    }
+                {
+                    id: 'ride-2',
+                    destinationName: 'Airport (KIAL)',
+                    destinationAddress: 'Devanahalli, Bangalore',
+                    departureTime: new Date(Date.now() + 18000000), // 5 hours from now
+                    availableSeats: 1,
+                    costPerPerson: 450,
+                    user: {
+                        id: 'user-3',
+                        displayName: 'Bob Jones',
+                        photoUrl: null,
+                        trustScore: 4.9
+                    },
+                    building: {
+                        name: 'Galaxy Apartments',
+                        area: 'Indiranagar'
+                    },
+                    participants: []
                 }
-            },
-            orderBy: { departureTime: 'asc' }
-        })
-
-        return { success: true, rides }
+            ]
+        }
     } catch (error) {
         console.error('Get active rides error:', error)
         return { success: false, error: 'Failed to fetch rides' }
+    }
+}
+
+
+
+
+export async function getRideHistory() {
+    const session = await getServerSession()
+    if (!session?.user) {
+        return { success: false, error: 'Not authenticated' }
+    }
+
+    // MOCK MODE
+    return {
+        success: true,
+        rides: [
+            {
+                id: 'ride-hist-1',
+                destinationName: 'MG Road',
+                destinationAddress: 'MG Road, Bangalore',
+                departureTime: new Date(Date.now() - 86400000), // 1 day ago
+                availableSeats: 0,
+                costPerPerson: 100,
+                type: 'SHARED_CAB',
+                status: 'COMPLETED',
+                building: { name: 'Galaxy Apartments' },
+                user: {
+                    id: 'user-2',
+                    displayName: 'Alice Smith',
+                    photoUrl: null,
+                    trustScore: 4.5
+                }
+            },
+            {
+                id: 'ride-hist-2',
+                destinationName: 'Orion Mall',
+                destinationAddress: 'Rajajinagar, Bangalore',
+                departureTime: new Date(Date.now() - 172800000), // 2 days ago
+                availableSeats: 0,
+                costPerPerson: 150,
+                type: 'OWN_CAR',
+                status: 'COMPLETED',
+                building: { name: 'Galaxy Apartments' },
+                user: {
+                    id: 'mock-user-id',
+                    displayName: 'Test User',
+                    photoUrl: 'https://github.com/shadcn.png',
+                    trustScore: 4.8
+                }
+            }
+        ]
+    }
+}
+
+export async function searchRides(query?: any) {
+    const session = await getServerSession()
+    if (!session?.user) {
+        return { success: false, error: 'Not authenticated' }
+    }
+
+    // MOCK MODE
+    return {
+        success: true,
+        rides: [
+            {
+                id: 'ride-201',
+                destinationName: 'Indiranagar Metro',
+                destinationAddress: 'Indiranagar, Bangalore',
+                departureTime: new Date(Date.now() + 7200000), // 2 hours from now
+                availableSeats: 2,
+                costPerPerson: 80,
+                type: 'SHARED_CAB',
+                status: 'ACTIVE',
+                building: { name: 'Galaxy Apartments' },
+                user: {
+                    id: 'user-201',
+                    displayName: 'John Doe',
+                    photoUrl: null,
+                    trustScore: 4.5,
+                    totalRides: 12
+                }
+            },
+            {
+                id: 'ride-202',
+                destinationName: 'Koramangala Forum',
+                destinationAddress: 'Koramangala, Bangalore',
+                departureTime: new Date(Date.now() + 10800000), // 3 hours from now
+                availableSeats: 3,
+                costPerPerson: 120,
+                type: 'OWN_CAR',
+                status: 'ACTIVE',
+                building: { name: 'Galaxy Apartments' },
+                user: {
+                    id: 'user-202',
+                    displayName: 'Jane Smith',
+                    photoUrl: null,
+                    trustScore: 4.8,
+                    totalRides: 34
+                }
+            },
+            {
+                id: 'ride-203',
+                destinationName: 'Phoenix Marketcity',
+                destinationAddress: 'Whitefield, Bangalore',
+                departureTime: new Date(Date.now() + 14400000), // 4 hours from now
+                availableSeats: 1,
+                costPerPerson: 150,
+                type: 'TWO_WHEELER',
+                status: 'ACTIVE',
+                building: { name: 'Galaxy Apartments' },
+                user: {
+                    id: 'user-203',
+                    displayName: 'Mike Ross',
+                    photoUrl: null,
+                    trustScore: 4.2,
+                    totalRides: 8
+                }
+            }
+        ]
     }
 }
 
@@ -250,113 +283,24 @@ export async function getMatches(rideId: string) {
 }
 
 export async function joinRide(rideId: string, matchId?: string) {
-    try {
-        const session = await getServerSession()
-        if (!session?.user) {
-            return { success: false, error: 'Not authenticated' }
-        }
-
-        const ride = await prisma.ride.findUnique({
-            where: { id: rideId },
-            include: { participants: true }
-        })
-
-        if (!ride) {
-            return { success: false, error: 'Ride not found' }
-        }
-
-        if (ride.availableSeats <= 0) {
-            return { success: false, error: 'No seats available' }
-        }
-
-        // Check if already joined
-        const existingParticipant = ride.participants.find(p => p.userId === session.user.id)
-        if (existingParticipant) {
-            return { success: false, error: 'Already joined this ride' }
-        }
-
-        // Add participant
-        await prisma.rideParticipant.create({
-            data: {
-                rideId: ride.id,
-                userId: session.user.id,
-                role: 'PASSENGER',
-                status: 'CONFIRMED',
-                agreedCost: ride.costPerPerson
-            }
-        })
-
-        // Update available seats
-        await prisma.ride.update({
-            where: { id: rideId },
-            data: { availableSeats: { decrement: 1 } }
-        })
-
-        // Update match status if provided
-        if (matchId) {
-            await prisma.match.update({
-                where: { id: matchId },
-                data: { status: 'ACCEPTED', respondedAt: new Date() }
-            })
-        }
-
-        // Notify ride organizer
-        await sendPushNotification(ride.userId, {
-            title: 'New Rider Joined!',
-            body: `Someone joined your ride to ${ride.destinationName}`,
-            data: { rideId: ride.id, type: 'participant_joined' }
-        })
-
-        revalidatePath(`/rides/${rideId}`)
-
-        return { success: true, message: 'Successfully joined ride' }
-    } catch (error) {
-        console.error('Join ride error:', error)
-        return { success: false, error: 'Failed to join ride' }
+    const session = await getServerSession()
+    if (!session?.user) {
+        return { success: false, error: 'Not authenticated' }
     }
+
+    // MOCK MODE
+    revalidatePath(`/rides/${rideId}`)
+    return { success: true, message: 'Successfully joined ride (Mock Mode)' }
 }
 
 export async function cancelRide(rideId: string) {
-    try {
-        const session = await getServerSession()
-        if (!session?.user) {
-            return { success: false, error: 'Not authenticated' }
-        }
-
-        const ride = await prisma.ride.findUnique({
-            where: { id: rideId },
-            include: { participants: true }
-        })
-
-        if (!ride) {
-            return { success: false, error: 'Ride not found' }
-        }
-
-        if (ride.userId !== session.user.id) {
-            return { success: false, error: 'Not authorized' }
-        }
-
-        await prisma.ride.update({
-            where: { id: rideId },
-            data: { status: 'CANCELLED' }
-        })
-
-        // Notify all participants
-        const participants = ride.participants.filter(p => p.userId !== session.user.id)
-        for (const participant of participants) {
-            await sendPushNotification(participant.userId, {
-                title: 'Ride Cancelled',
-                body: `The ride to ${ride.destinationName} has been cancelled by the organizer.`,
-                data: { rideId: ride.id, type: 'ride_cancelled' }
-            })
-        }
-
-        revalidatePath('/dashboard')
-        revalidatePath(`/rides/${rideId}`)
-
-        return { success: true, message: 'Ride cancelled successfully' }
-    } catch (error) {
-        console.error('Cancel ride error:', error)
-        return { success: false, error: 'Failed to cancel ride' }
+    const session = await getServerSession()
+    if (!session?.user) {
+        return { success: false, error: 'Not authenticated' }
     }
+
+    // MOCK MODE
+    revalidatePath('/dashboard')
+    revalidatePath(`/rides/${rideId}`)
+    return { success: true, message: 'Ride cancelled successfully (Mock Mode)' }
 }

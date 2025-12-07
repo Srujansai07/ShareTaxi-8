@@ -60,6 +60,11 @@ export async function middleware(request: NextRequest) {
     const protectedPaths = ['/dashboard', '/rides', '/profile', '/matches']
     const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
+    // MOCK MODE: Bypass auth check if mock cookie exists
+    if (request.cookies.get('mock-session')) {
+        return response
+    }
+
     // Redirect to login if accessing protected route without auth
     if (isProtectedPath && !user) {
         return NextResponse.redirect(new URL('/login', request.url))

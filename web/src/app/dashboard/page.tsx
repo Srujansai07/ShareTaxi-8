@@ -4,7 +4,7 @@ import { getActiveRides } from '@/app/actions/rides'
 import { RideCard } from '@/components/RideCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, TrendingUp, Users, Leaf } from 'lucide-react'
+import { Plus, TrendingUp, Users, Leaf, Search, Bell, Settings } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function DashboardPage() {
@@ -25,12 +25,30 @@ export default async function DashboardPage() {
                     <h1 className="text-3xl font-bold">Dashboard</h1>
                     <p className="text-muted-foreground">Manage your rides and find matches</p>
                 </div>
-                <Link href="/rides/create">
-                    <Button size="lg">
-                        <Plus className="h-5 w-5 mr-2" />
-                        Create Ride
-                    </Button>
-                </Link>
+                <div className="flex gap-2">
+                    <Link href="/settings">
+                        <Button variant="ghost" size="icon">
+                            <Settings className="h-5 w-5" />
+                        </Button>
+                    </Link>
+                    <Link href="/notifications">
+                        <Button variant="ghost" size="icon">
+                            <Bell className="h-5 w-5" />
+                        </Button>
+                    </Link>
+                    <Link href="/rides/search">
+                        <Button variant="outline" size="lg">
+                            <Search className="h-5 w-5 mr-2" />
+                            Find Ride
+                        </Button>
+                    </Link>
+                    <Link href="/rides/create">
+                        <Button size="lg">
+                            <Plus className="h-5 w-5 mr-2" />
+                            Create Ride
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             {/* Stats Cards */}

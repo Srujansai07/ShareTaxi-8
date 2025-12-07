@@ -1,81 +1,26 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { getMatches } from '@/app/actions/matches'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MatchCard } from '@/components/MatchCard'
+import { MatchCard } from '@/components/rides/MatchCard'
 import { Users, Filter } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function MatchesPage() {
-    const session = await getServerSession()
+    const { success, matches } = await getMatches()
 
-    if (!session) {
+    if (!success) {
         redirect('/login')
     }
-
-    const user = await prisma.user.findUnique({
-        where: { phoneNumber: session.user.phone! }
-    })
-
-    if (!user) {
-        redirect('/login')
-    }
-
-    // Get all matches for user's active rides
-    const userRides = await prisma.ride.findMany({
-        where: {
-            userId: user.id,
-            status: 'ACTIVE',
-            expiresAt: { gt: new Date() }
-        },
-        select: { id: true }
-    })
-
-    const rideIds = userRides.map(r => r.id)
-
-    const matches = await prisma.match.findMany({
-        where: {
-            sourceRideId: { in: rideIds },
-            status: 'PENDING',
-            expiresAt: { gt: new Date() }
-        },
-        include: {
-            sourceRide: {
-                select: {
-                    id: true,
-                    destinationName: true,
-                    departureTime: true,
-                    type: true
-                }
-            },
-            user: {
-                select: {
-                    id: true,
-                    displayName: true,
-                    photoUrl: true,
-                    trustScore: true,
-                    totalRides: true,
-                    building: {
-                        select: {
-                            flatNumber: true,
-                            tower: true
-                        }
-                    }
-                }
-            }
-        },
-        orderBy: { score: 'desc' }
-    })
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
+        <div className="container mx-auto p-6 space-y-6 pb-24">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">Ride Matches</h1>
                     <p className="text-muted-foreground">
-                        {matches.length} potential matches found
+                        {matches?.length || 0} potential matches found
                     </p>
                 </div>
                 <div className="flex gap-2">
