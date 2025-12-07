@@ -87,8 +87,8 @@ export async function triggerSOS(formData: FormData) {
 
         // Notify all ride participants
         const notificationPromises = ride.participants
-            .filter(p => p.userId !== user.id)
-            .map(p => sendPushNotification(p.userId, {
+            .filter((p: { userId: string }) => p.userId !== user.id)
+            .map((p: { userId: string }) => sendPushNotification(p.userId, {
                 title: '🚨 SOS ALERT',
                 body: `${user.displayName} has triggered an SOS alert!`,
                 data: {
@@ -102,7 +102,7 @@ export async function triggerSOS(formData: FormData) {
             }))
 
         // Notify emergency contacts
-        const emergencyPromises = user.emergencyContacts.map(contact =>
+        const emergencyPromises = user.emergencyContacts.map((contact: { name: string; phoneNumber: string }) =>
             // In production, send SMS via Twilio or similar
             console.log(`SOS Alert to ${contact.name} (${contact.phoneNumber}): ${user.displayName} needs help at ${validated.location.latitude}, ${validated.location.longitude}`)
         )
