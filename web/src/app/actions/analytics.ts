@@ -71,7 +71,7 @@ export async function getUserAnalytics() {
         })
 
         const avgRating = ratings.length > 0
-            ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+            ? ratings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / ratings.length
             : 0
 
         const analytics = {
