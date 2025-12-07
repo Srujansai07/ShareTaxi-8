@@ -64,7 +64,7 @@ export default function BuildingOnboardingPage() {
 
         if (result.success) {
             toast.success('Building verified! Welcome to ShareTaxi!')
-            router.push(result.redirectTo || '/dashboard')
+            router.push('/dashboard')
         } else {
             toast.error(result.error || 'Failed to verify building')
         }

@@ -19,6 +19,13 @@ interface MapComponentProps {
     height?: string
 }
 
+// Declare google maps types
+declare global {
+    interface Window {
+        google: typeof google
+    }
+}
+
 export function MapComponent({
     center = { lat: 28.6139, lng: 77.2090 }, // Default to Delhi
     markers = [],
@@ -36,14 +43,14 @@ export function MapComponent({
                 const loader = new Loader({
                     apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
                     version: 'weekly',
-                    libraries: ['places', 'geometry', 'directions']
+                    libraries: ['places', 'geometry', 'routes']
                 })
 
                 await loader.load()
 
                 if (!mapRef.current) return
 
-                const mapInstance = new google.maps.Map(mapRef.current, {
+                const mapInstance = new window.google.maps.Map(mapRef.current, {
                     center,
                     zoom: 13,
                     mapTypeControl: false,
@@ -59,7 +66,7 @@ export function MapComponent({
                     mapInstance.addListener('click', async (e: google.maps.MapMouseEvent) => {
                         if (!e.latLng) return
 
-                        const geocoder = new google.maps.Geocoder()
+                        const geocoder = new window.google.maps.Geocoder()
                         const result = await geocoder.geocode({ location: e.latLng })
 
                         if (result.results[0]) {
@@ -85,7 +92,7 @@ export function MapComponent({
         if (!map) return
 
         markers.forEach(marker => {
-            new google.maps.Marker({
+            new window.google.maps.Marker({
                 position: marker.position,
                 map,
                 title: marker.title,
@@ -98,8 +105,8 @@ export function MapComponent({
     useEffect(() => {
         if (!map || !route) return
 
-        const directionsService = new google.maps.DirectionsService()
-        const directionsRenderer = new google.maps.DirectionsRenderer({
+        const directionsService = new window.google.maps.DirectionsService()
+        const directionsRenderer = new window.google.maps.DirectionsRenderer({
             map,
             suppressMarkers: false
         })
@@ -114,9 +121,9 @@ export function MapComponent({
                 origin: route.origin,
                 destination: route.destination,
                 waypoints,
-                travelMode: google.maps.TravelMode.DRIVING
+                travelMode: window.google.maps.TravelMode.DRIVING
             },
-            (result, status) => {
+            (result: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
                 if (status === 'OK' && result) {
                     directionsRenderer.setDirections(result)
                 }

@@ -50,7 +50,7 @@ export default function ProfileOnboardingPage() {
 
         if (result.success) {
             toast.success('Profile created!')
-            router.push(result.redirectTo || '/onboarding/building')
+            router.push('/onboarding/building')
         } else {
             toast.error(result.error || 'Failed to create profile')
         }
