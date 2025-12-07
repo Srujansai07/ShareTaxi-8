@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { sendOTP, verifyOTP } from '@/app/actions/auth'
 import { toast } from 'sonner'
-import { Phone, ArrowRight } from 'lucide-react'
+import { Phone, ArrowRight, Car, Shield, Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
     const router = useRouter()
@@ -65,23 +65,42 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader className="text-center">
-                    <CardTitle className="text-3xl font-bold">Welcome to ShareTaxi</CardTitle>
-                    <CardDescription>
-                        Connect with neighbors, share rides, save money
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
+        <div className="min-h-screen gradient-hero flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Decorative elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl" />
+            </div>
+
+            <div className="w-full max-w-md relative z-10">
+                {/* Logo */}
+                <div className="text-center mb-8 animate-fade-down">
+                    <Link href="/" className="inline-flex items-center gap-2 mb-4">
+                        <Car className="h-8 w-8 text-blue-600" />
+                        <span className="text-2xl font-bold gradient-text">ShareTaxi</span>
+                    </Link>
+                </div>
+
+                {/* Card */}
+                <div className="glass-card rounded-3xl p-8 animate-fade-up">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                            Welcome Back!
+                        </h1>
+                        <p className="text-slate-600 dark:text-slate-400">
+                            Sign in to continue sharing rides
+                        </p>
+                    </div>
+
                     {step === 'phone' ? (
-                        <form onSubmit={handleSendOTP} className="space-y-4">
+                        <form onSubmit={handleSendOTP} className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="phone">Phone Number</Label>
-                                <div className="flex gap-2">
-                                    <div className="flex items-center px-3 border rounded-md bg-muted">
-                                        <Phone className="h-4 w-4 mr-2" />
-                                        <span className="text-sm">+91</span>
+                                <Label htmlFor="phone" className="text-slate-700 dark:text-slate-300">
+                                    Phone Number
+                                </Label>
+                                <div className="flex gap-3">
+                                    <div className="flex items-center px-4 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700">
+                                        <span className="text-slate-600 dark:text-slate-400 font-medium">+91</span>
                                     </div>
                                     <Input
                                         id="phone"
@@ -91,42 +110,62 @@ export default function LoginPage() {
                                         onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                                         maxLength={10}
                                         required
+                                        className="flex-1 h-12 rounded-xl text-lg border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500"
                                     />
                                 </div>
                             </div>
 
-                            <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? 'Sending...' : 'Send OTP'}
-                                <ArrowRight className="h-4 w-4 ml-2" />
+                            <Button
+                                type="submit"
+                                className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-lg font-semibold shadow-lg shadow-blue-500/30"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <span className="flex items-center gap-2">
+                                        <Sparkles className="h-5 w-5 animate-spin" />
+                                        Sending...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2">
+                                        Send OTP
+                                        <ArrowRight className="h-5 w-5" />
+                                    </span>
+                                )}
                             </Button>
                         </form>
                     ) : (
-                        <form onSubmit={handleVerifyOTP} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="otp">Enter OTP</Label>
+                        <form onSubmit={handleVerifyOTP} className="space-y-6">
+                            <div className="space-y-3">
+                                <Label htmlFor="otp" className="text-slate-700 dark:text-slate-300">
+                                    Enter OTP
+                                </Label>
                                 <Input
                                     id="otp"
                                     type="text"
-                                    placeholder="123456"
+                                    placeholder="• • • • • •"
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                     maxLength={6}
                                     required
-                                    className="text-center text-2xl tracking-widest"
+                                    className="h-14 text-center text-2xl tracking-[0.5em] rounded-xl border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500"
                                 />
-                                <p className="text-sm text-muted-foreground text-center">
+                                <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
                                     Sent to +91 {phoneNumber}
                                 </p>
                             </div>
 
-                            <div className="space-y-2">
-                                <Button type="submit" className="w-full" disabled={isLoading}>
+                            <div className="space-y-3">
+                                <Button
+                                    type="submit"
+                                    className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-lg font-semibold shadow-lg shadow-emerald-500/30"
+                                    disabled={isLoading}
+                                >
                                     {isLoading ? 'Verifying...' : 'Verify & Continue'}
                                 </Button>
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    className="w-full"
+                                    className="w-full text-slate-600 dark:text-slate-400 hover:text-slate-900"
                                     onClick={() => setStep('phone')}
                                 >
                                     Change Number
@@ -134,8 +173,29 @@ export default function LoginPage() {
                             </div>
                         </form>
                     )}
-                </CardContent>
-            </Card>
+
+                    <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 text-center">
+                        <p className="text-slate-600 dark:text-slate-400">
+                            New to ShareTaxi?{' '}
+                            <Link href="/signup" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+                                Sign up
+                            </Link>
+                        </p>
+                    </div>
+                </div>
+
+                {/* Trust indicators */}
+                <div className="flex justify-center gap-6 mt-6 animate-fade-up stagger-2">
+                    <div className="flex items-center gap-2 text-slate-500 text-sm">
+                        <Shield className="h-4 w-4 text-emerald-500" />
+                        <span>Secure Login</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-500 text-sm">
+                        <Phone className="h-4 w-4 text-blue-500" />
+                        <span>OTP Verified</span>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
