@@ -82,7 +82,7 @@ export async function submitRating(formData: FormData) {
             select: { rating: true }
         })
 
-        const avgRating = userRatings.reduce((sum, r) => sum + r.rating, 0) / userRatings.length
+        const avgRating = userRatings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / userRatings.length
         const trustScore = Math.round(avgRating * 20) // Convert 1-5 to 20-100
 
         await prisma.user.update({
@@ -125,7 +125,7 @@ export async function getRatingsForUser(userId: string) {
         })
 
         const avgRating = ratings.length > 0
-            ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+            ? ratings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / ratings.length
             : 0
 
         return { success: true, ratings, avgRating, totalRatings: ratings.length }
