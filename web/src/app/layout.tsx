@@ -22,9 +22,6 @@ export default function RootLayout({
                 <MobileShell>
                     {children}
                 </MobileShell>
-                <div className="fixed bottom-0 left-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold text-center py-1 z-50 opacity-90">
-                    MOCK MODE: Database Disconnected • UI Demo Only
-                </div>
                 <Toaster />
             </body>
         </html>
