@@ -1,20 +1,33 @@
 import { searchRides } from '@/app/actions/rides'
+import { getDemoRides } from '@/app/actions/demo'
 import { RideCard } from '@/components/RideCard'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Search, MapPin, Filter, Navigation, Car, ArrowRight } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 
 export default async function SearchRidesPage({
     searchParams
 }: {
     searchParams: { q?: string; from?: string; to?: string }
 }) {
-    const { success, rides } = await searchRides(searchParams)
+    // Check if in demo mode
+    const cookieStore = cookies()
+    const isDemo = !!cookieStore.get('demo-session') || !!cookieStore.get('mock-session')
 
-    if (!success) {
-        redirect('/login')
+    // Get rides - use demo rides if in demo mode
+    let rides: any[] = []
+    if (isDemo) {
+        const demoResult = await getDemoRides()
+        rides = demoResult.success ? demoResult.rides : []
+    } else {
+        const result = await searchRides(searchParams)
+        if (!result.success) {
+            redirect('/login')
+        }
+        rides = result.rides || []
     }
 
     return (

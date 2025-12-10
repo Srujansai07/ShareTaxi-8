@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from '@/lib/auth'
 import { getActiveRides } from '@/app/actions/rides'
+import { getDemoRides } from '@/app/actions/demo'
 import { RideCard } from '@/components/RideCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Plus, TrendingUp, Users, Leaf, Search, Bell, Settings, Car, MapPin, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 
 export default async function DashboardPage() {
     const session = await getServerSession()
@@ -14,8 +16,25 @@ export default async function DashboardPage() {
         redirect('/login')
     }
 
-    const ridesResult = await getActiveRides()
-    const rides = ridesResult.success ? ridesResult.rides : []
+    // Check if in demo mode
+    const cookieStore = cookies()
+    const isDemo = !!cookieStore.get('demo-session') || !!cookieStore.get('mock-session')
+
+    // Get rides - use demo rides if in demo mode
+    let rides: any[] = []
+    if (isDemo) {
+        const demoResult = await getDemoRides()
+        rides = demoResult.success ? demoResult.rides : []
+    } else {
+        const ridesResult = await getActiveRides()
+        rides = ridesResult.success ? (ridesResult.rides || []) : []
+    }
+
+    // Get user stats from session
+    const user = session.user
+    const totalRides = user?.totalRides || 0
+    const totalCO2Saved = user?.totalCO2Saved || 0
+    const moneySaved = Math.round(totalRides * 85) // ~₹85 saved per ride
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -77,7 +96,7 @@ export default async function DashboardPage() {
                                 <TrendingUp className="h-5 w-5" />
                             </div>
                         </div>
-                        <div className="text-4xl font-bold text-emerald-600">₹0</div>
+                        <div className="text-4xl font-bold text-emerald-600">₹{moneySaved.toLocaleString()}</div>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">total savings</p>
                     </div>
 
@@ -88,7 +107,7 @@ export default async function DashboardPage() {
                                 <Leaf className="h-5 w-5" />
                             </div>
                         </div>
-                        <div className="text-4xl font-bold text-teal-600">0 kg</div>
+                        <div className="text-4xl font-bold text-teal-600">{totalCO2Saved.toFixed(1)} kg</div>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">carbon offset</p>
                     </div>
                 </div>

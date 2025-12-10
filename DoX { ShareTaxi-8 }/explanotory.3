@@ -1,0 +1,1413 @@
+Looking at your three idea variations and the existing RideShare Local plan, I can see you want to build something with a stronger focus on environmental impact tracking and social motivation through CO2 savings. Let me create a comprehensive development package that incorporates your vision while using the modern golden stack.
+🌱 EcoRide Local - Complete Development Package
+Environmental Carpooling & Community Mobility Platform
+
+📋 EXECUTIVE SUMMARY
+EcoRide Local is a hyper-local carpooling platform that connects neighbors traveling to similar destinations while making CO2 savings and environmental impact the central motivator. Unlike commercial ride-sharing apps, this is a community-driven sharing platform where environmental contributions create social reputation and community recognition.
+Core Innovation
+The app tracks and splits CO2 savings between drivers and passengers, creating a social credit system where environmental contribution becomes a status symbol within the community. Users see their monthly impact, earn recognition badges, and build reputation through consistent eco-friendly behavior.
+
+🎯 PRODUCT REQUIREMENTS DOCUMENT (PRD)
+Vision Statement
+To transform urban mobility by making environmental impact visible, measurable, and socially rewarding, turning every shared ride into a celebrated contribution to planetary health.
+Product Positioning
+Category: Hyper-local Eco-Mobility + Social Impact Platform
+Target Market: Urban residential complexes, apartment communities, university campuses
+Primary Users: Environmentally-conscious residents, working professionals, students aged 18-55
+Geographic Focus: Indian metros (Bangalore, Hyderabad, Pune, Ahmedabad, Chennai)
+Key Differentiator: CO2 savings as social currency and community reputation
+Success Metrics
+User Acquisition: 1,000 active users across 30 buildings (Month 3)
+Engagement: 50% weekly active users
+Match Rate: 30% successful ride matches per week
+Environmental Impact: 25,000 kg CO2 saved in first 6 months
+Social Engagement: 70% of users checking their monthly CO2 report
+Retention: 65% 30-day retention driven by environmental leaderboards
+Problem Statement
+User Pain Points:
+Spending ₹3,000-5,000 monthly on individual transportation while neighbors make same journeys
+No visibility into personal environmental impact of daily transportation choices
+Guilt about carbon footprint but no easy way to reduce it
+Lack of social recognition for making eco-friendly choices
+Missing opportunities to connect with like-minded neighbors
+Market Validation:
+68% of urban residents express concern about their carbon footprint (Nielsen 2024)
+75% of apartment residents travel to 5 common locations weekly
+Growing demand for sustainable transportation (₹450B urban mobility market in India)
+Social recognition drives 60% more engagement than financial incentives alone (Behavioral Economics Research)
+Target User Personas
+Persona 1: Aarav (Environmental Advocate)
+Age: 29, IT Professional
+Lives in 400-unit apartment complex
+Values: Sustainability, community building
+Pain: Feels guilty about daily Uber rides, wants to reduce carbon footprint
+Motivation: "I want to see the real impact of my choices and inspire others"
+Persona 2: Priya (Budget-Conscious Professional)
+Age: 26, Marketing Manager
+Lives in PG accommodation
+Values: Cost savings, making friends, doing good
+Pain: High transportation costs, feels isolated in new city
+Motivation: "Save money while being a good person and meeting neighbors"
+Persona 3: Dr. Mehta (Community Leader)
+Age: 45, Homemaker & Community Volunteer
+Lives in gated community
+Values: Community welfare, setting good example
+Pain: Wants to organize collective action but no platform
+Motivation: "Lead community toward sustainable practices and get recognition for it"
+
+🚀 CORE FEATURES & REQUIREMENTS
+Phase 1: MVP Features (Months 1-3)
+Feature 1: User Registration & Building Verification
+User Story: As a new user, I want to quickly register and verify my building so I can start connecting with verified neighbors only.
+Requirements:
+Phone number OTP authentication (Supabase Auth)
+Building verification via GPS + address confirmation
+Profile creation (name, photo, building/flat number)
+Privacy settings (profile visibility controls)
+Auto-detect building from GPS coordinates
+Acceptance Criteria:
+Registration completed in under 2 minutes
+99.9% OTP delivery rate
+GPS accuracy within 100 meters
+Building database covers top 100 residential complexes in each city
+Clear privacy controls visible during onboarding
+
+Feature 2: Ride Intent Creation with CO2 Preview
+User Story: As a resident, I want to announce where I'm going and see the potential CO2 savings before finding matches.
+Requirements:
+Destination input with autocomplete (Google Places API)
+Departure time selection (now, +15min, +30min, custom)
+Ride type selection (own car, looking for ride, public transport meetup)
+CO2 Impact Preview: Show estimated CO2 savings if match is found
+Route distance and traffic condition display
+Visibility settings (building only, 5km radius, 10km radius)
+CO2 Calculation Logic:
+Base emissions per km:
+- Solo car: 0.21 kg CO2/km (average Indian petrol car)
+- Shared car (2 people): 0.105 kg CO2/km per person (50% reduction)
+- Shared car (3 people): 0.07 kg CO2/km per person (67% reduction)
+- Public transport: 0.05 kg CO2/km per person
+
+CO2 Saved = (Solo car emissions - Shared emissions) × Distance
+
+Acceptance Criteria:
+Ride created in under 30 seconds
+CO2 preview appears immediately after destination selection
+Real-time visibility to eligible neighbors
+Auto-expire after departure time + 30 minutes
+
+Feature 3: Smart Eco-Matching Algorithm
+User Story: As a user, I want to automatically see potential ride partners ranked by both convenience and environmental impact.
+Requirements:
+Proximity matching (destination within 2km, configurable)
+
+
+Time window matching (±30 minutes, configurable)
+
+
+Building/locality filtering with expandable radius
+
+
+Match scoring algorithm:
+
+
+Destination proximity: 35%
+Time alignment: 25%
+User trust score: 20%
+CO2 savings potential: 15%
+Previous successful rides: 5%
+Display for each match:
+
+
+User profile with trust score
+Destination proximity
+Time difference
+Estimated CO2 savings (prominent)
+CO2 split visualization (60% driver, 40% passenger default)
+Acceptance Criteria:
+Matches displayed within 2 seconds of ride creation
+90% accuracy in destination proximity calculations
+Real-time updates every 30 seconds
+CO2 savings displayed prominently in match cards
+Users can adjust CO2 split ratio before accepting match
+
+Feature 4: In-App Coordination & Chat
+User Story: As matched users, we want to coordinate ride details while building rapport through shared environmental goals.
+Requirements:
+Real-time chat (WebSocket-based)
+Pre-defined quick messages:
+"Let's do this! 🌱"
+"I'm ready at the gate"
+"Running 5 min late"
+"Together we'll save X kg CO2!"
+Contact sharing (optional, after mutual acceptance)
+Pickup point selection on map
+Block/report functionality
+Chat history retained for 7 days
+Acceptance Criteria:
+Messages delivered within 2 seconds
+Push notifications for new messages
+Visual emphasis on environmental impact in conversation
+Seamless transition from match to coordination
+
+Feature 5: Live Ride Tracking & Real-Time Impact
+User Story: As participants, I want to see our live locations and watch our CO2 savings accumulate in real-time during the ride.
+Requirements:
+GPS tracking (active only during ride window)
+Live map showing both participants
+Real-time CO2 savings counter (animated during ride)
+ETA calculations
+Geofencing for pickup point arrival notifications
+Auto-disable tracking 15 minutes after ride completion
+Background location with battery optimization
+Acceptance Criteria:
+Location updates every 10 seconds
+Battery consumption < 5% per hour
+CO2 counter updates smoothly every 500 meters
+Privacy: location visible only to ride participants
+Celebration animation when ride completes
+
+Feature 6: CO2 Impact Dashboard & Social Recognition
+User Story: As a user, I want to see my environmental impact over time and earn recognition for my contributions.
+Requirements:
+Personal Impact Dashboard:
+Total CO2 saved (lifetime)
+Monthly CO2 savings (with month-over-month comparison)
+Equivalent impact visualizations:
+Trees planted equivalent
+Kilometers of car-free driving
+Plastic bottles prevented
+Breakdown: CO2 as driver vs as passenger
+Streak tracking (consecutive days with shared rides)
+Social Recognition System:
+Trust Score (1-5 stars): Based on reliability and ride completion
+Eco Score (0-1000 points): Based on total CO2 saved
+Community Rank: Position within building and city
+Badges & Achievements:
+"First Saver" (first shared ride)
+"Eco Warrior" (1000 kg CO2 saved)
+"Community Champion" (50 rides as driver)
+"Green Streak" (7 consecutive days)
+"Building Leader" (most CO2 saved in building this month)
+Monthly Impact Report:
+Email report sent on 1st of each month
+Shareable social media graphics
+Year-over-year comparison
+Building-wide impact statistics
+Acceptance Criteria:
+Dashboard loads in under 1 second
+CO2 calculations accurate within 5%
+Badges unlocked immediately upon achievement
+Monthly report sent reliably at 9 AM on 1st
+Social sharing increases user retention by 20%
+
+Feature 7: Post-Ride Rating & CO2 Split Confirmation
+User Story: After completing a ride, I want to rate the experience and confirm the CO2 savings were properly credited.
+Requirements:
+Post-ride rating prompt (appears immediately after ride ends)
+5-star rating system with quick tags:
+Punctual, Friendly, Safe driver, Good conversation, Eco-conscious
+CO2 split confirmation screen:
+Shows total CO2 saved
+Shows split: Driver receives 60%, Passenger receives 40% (default)
+Users can adjust split if they agree (e.g., 50-50 for equal contribution)
+Confirmation required from both parties
+Optional text feedback
+Photo upload (optional, for memorable rides)
+CO2 Split Logic: Default ratios:
+Driver (own car): 60%
+Passenger: 40%
+Rationale: Driver bears vehicle ownership, maintenance, and initial decision to share
+For equal contribution (both searched for ride):
+50-50 split
+Custom split:
+Users can propose different splits
+Both must agree
+System suggests fair split based on ride context
+Acceptance Criteria:
+Rating prompt appears within 5 seconds of ride completion
+CO2 split screen explains the logic clearly
+Both users must confirm before CO2 credits to accounts
+Disputed splits go to default ratio after 24 hours
+Average rating time under 30 seconds
+
+Feature 8: Safety & Trust System
+User Story: As a user, I want to feel safe traveling with neighbors I haven't met before.
+Requirements:
+Government ID verification (optional, increases trust score)
+Building address verification (mandatory)
+Emergency SOS button (prominent, red, requires 3-second hold)
+Emergency contact auto-notification
+Live location sharing with emergency contacts (during SOS)
+In-app support chat
+Block/report user functionality
+Ride history and past ratings visible
+SOS Flow:
+User holds SOS button for 3 seconds
+Confirmation: "Are you in emergency?"
+Upon confirmation:
+Send SMS to all emergency contacts with live location link
+Alert app support team with priority ticket
+Notify ride participants (if in active ride)
+Display local police station details
+Start audio recording (with consent during onboarding)
+Keep screen on with emergency UI
+Acceptance Criteria:
+SOS alert sent within 5 seconds
+Emergency contacts receive SMS with location link
+Support team response within 2 minutes
+False alarm resolution process in place
+User feels 90%+ confidence in safety features (survey)
+
+Phase 2: Enhanced Features (Months 4-6)
+Feature 9: Recurring Eco-Commutes
+User Story: As a regular commuter, I want to set up recurring rides with my favorite carpool buddies.
+Requirements:
+Save frequent routes (home → office, home → gym)
+Weekly schedule setup (Mon-Fri, 9 AM)
+"Eco Buddy" system (favorite regular partners)
+Auto-match with regular commuters
+Flexible skip options for specific days
+Push reminder 30 minutes before regular ride
+Acceptance Criteria:
+Recurring setup completed in under 1 minute
+85% of recurring rides successfully matched
+Reduces daily app interaction to under 10 seconds for regulars
+
+Feature 10: Community Feed & Eco-Challenges
+User Story: As a community member, I want to see our collective impact and participate in building-wide challenges.
+Requirements:
+Building-wide activity feed:
+Recent rides in the building
+CO2 milestones achieved
+Top savers of the week
+Upcoming group trips
+Monthly eco-challenges:
+"Building Carbon Zero Week" (most rides in a week)
+"Department Carpool Championship" (workplace competition)
+"Weekend Warrior" (share weekend trips too)
+Building-level statistics:
+Total CO2 saved by building (monthly/yearly)
+Most active building in city
+Trees planted equivalent for building
+Group ride organization:
+Movie night: Who wants to go to cinema?
+Weekend trip: Road trip to nearby hill station
+Event coordination: Wedding, party carpooling
+Acceptance Criteria:
+Feed updates in real-time
+Challenges drive 30% increase in ride matching
+Building pride increases retention by 25%
+Group rides have 70% completion rate
+
+Feature 11: Gamification & Rewards
+User Story: As an engaged user, I want to earn rewards and recognition for my consistent environmental contributions.
+Requirements:
+Points System:
+Base points: 10 points per kg CO2 saved
+Bonus multipliers:
+First ride of the day: 1.5x
+Weekend rides: 2x
+Rides as driver: 1.3x
+7-day streak: 2x for all rides that week
+Building challenges: 3x during challenge period
+Leaderboards:
+Building leaderboard (monthly reset)
+City leaderboard (all-time + monthly)
+Friends leaderboard (personal network)
+Department/company leaderboards (for workplace users)
+Rewards & Incentives:
+Virtual badges and titles
+Shareable certificates (1000 kg milestone, etc.)
+Partnership rewards:
+Local café discounts (powered by CO2 credits)
+Electric vehicle charging credits
+Public transport vouchers
+Tree planting on user's behalf (1 tree per 500 kg CO2)
+Achievement System: Tiered achievements:
+Bronze: 100 kg CO2 saved
+Silver: 500 kg CO2 saved
+Gold: 1000 kg CO2 saved
+Platinum: 5000 kg CO2 saved
+Diamond: 10,000 kg CO2 saved
+Acceptance Criteria:
+Points credited within 1 minute of ride completion
+Leaderboards update in real-time
+Reward redemption process is seamless
+60% of users engage with gamification features
+Partner rewards increase retention by 35%
+
+Feature 12: Smart Recommendations & AI Predictions
+User Story: As a frequent user, I want the app to predict my travel patterns and suggest rides proactively.
+Requirements:
+ML-powered destination prediction based on:
+Day of week
+Time of day
+Historical patterns
+Calendar integration (optional)
+Proactive match notifications:
+"Your usual office carpool buddy is leaving in 20 min"
+"3 neighbors going to the mall area you visited last weekend"
+Traffic-aware timing suggestions:
+"Leave 15 min earlier to avoid traffic and save more CO2"
+Cost optimization recommendations:
+"Sharing this ride saves you ₹80 and 3.2 kg CO2"
+Acceptance Criteria:
+Prediction accuracy: 75% for regular commuters
+Proactive notifications have 45% acceptance rate
+User-reported convenience score: 8/10
+
+Phase 3: Advanced Features (Months 7-12)
+Feature 13: Building Admin Portal & Analytics
+User Story: As a building administrator, I want to see our community's environmental impact and manage the resident network.
+Requirements:
+Building-level dashboard:
+Total rides facilitated
+Total CO2 saved
+Most active residents
+Participation rate
+Month-over-month trends
+Resident verification management
+Community announcements
+Event coordination tools
+Safety incident management
+Data export for sustainability reports
+Integration with building management systems
+Acceptance Criteria:
+Admins can verify residents in under 10 seconds
+Dashboard provides actionable insights
+80% of buildings with admins show 40% higher engagement
+
+Feature 14: Enterprise & Campus Integration
+User Story: As a corporate campus or university, we want to offer this as an employee/student benefit and track our organizational carbon footprint reduction.
+Requirements:
+Enterprise dashboard for HR/Admin
+Employee/student verification via corporate email
+Department-wise CO2 tracking
+Campus-wide challenges and competitions
+Integration with sustainability reporting
+Custom branding options
+Parking spot optimization (fewer spots needed)
+API for integration with internal systems
+B2B Value Proposition:
+Reduce company carbon footprint (ESG goals)
+Lower parking infrastructure costs
+Employee satisfaction (cost savings + eco-consciousness)
+Quantifiable sustainability metrics for reports
+Acceptance Criteria:
+Enterprise onboarding completed in 1 day
+30% employee adoption within 3 months
+Measurable reduction in single-occupancy vehicle trips
+Customer satisfaction score: 8.5/10
+
+Feature 15: Carbon Credit Marketplace (Future)
+User Story: As a heavy user with significant CO2 savings, I want to convert my environmental contributions into tangible value.
+Requirements:
+User CO2 credits can be:
+Donated to environmental NGOs
+Converted to tree-planting campaigns
+Used for carbon offset purchases
+Exchanged for local rewards
+Corporate partnerships for carbon credit redemption
+Blockchain-based credit verification (optional)
+Impact transparency (see where your credits go)
+This is aspirational for Phase 3 and depends on partnerships with environmental organizations and regulatory clarity on carbon credits in India.
+
+🗂️ DATABASE SCHEMA (Prisma)
+Let me now provide the complete Prisma schema with enhanced CO2 tracking:
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id            String   @id @default(cuid())
+  phoneNumber   String   @unique
+  email         String?  @unique
+  
+  // Profile
+  fullName      String
+  displayName   String
+  photoUrl      String?
+  gender        Gender?
+  dateOfBirth   DateTime?
+  bio           String?
+  
+  // Building Information
+  buildingId    String
+  building      Building @relation(fields: [buildingId], references: [id])
+  tower         String?
+  flatNumber    String
+  
+  // Verification
+  isVerified    Boolean  @default(false)
+  verifiedAt    DateTime?
+  verificationMethod VerificationMethod?
+  govIdVerified Boolean  @default(false)
+  govIdType     String?
+  
+  // Trust & Reputation
+  trustScore    Float    @default(3.0) // 0-5 stars
+  ecoScore      Int      @default(0) // Points based on CO2 saved
+  totalRides    Int      @default(0)
+  completionRate Float   @default(0.0)
+  responseTime  Int?     // Average in minutes
+  
+  // CO2 Statistics (denormalized for performance)
+  totalCO2Saved Float    @default(0) // in kg
+  co2AsDriver   Float    @default(0)
+  co2AsPassenger Float   @default(0)
+  currentStreak Int      @default(0) // consecutive days
+  longestStreak Int      @default(0)
+  
+  // Preferences
+  preferences   UserPreferences?
+  
+  // Emergency Contacts
+  emergencyContacts EmergencyContact[]
+  
+  // Relationships
+  ridesCreated     Ride[]           @relation("CreatedRides")
+  rideParticipations RideParticipant[]
+  sentMessages     Message[]        @relation("SentMessages")
+  receivedMessages Message[]        @relation("ReceivedMessages")
+  givenRatings     Rating[]         @relation("RaterUser")
+  receivedRatings  Rating[]         @relation("RatedUser")
+  sosAlerts        SOSAlert[]
+  notifications    Notification[]
+  achievements     UserAchievement[]
+  
+  // Statistics
+  stats         UserStatistics?
+  
+  // Status
+  status        UserStatus @default(ACTIVE)
+  lastActiveAt  DateTime   @default(now())
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  @@index([buildingId])
+  @@index([phoneNumber])
+  @@index([status])
+  @@index([trustScore])
+  @@index([ecoScore])
+  @@index([totalCO2Saved])
+}
+
+model UserPreferences {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Ride Preferences
+  genderPreference  GenderPreference @default(ANY)
+  smokingAllowed    Boolean @default(false)
+  petsAllowed       Boolean @default(false)
+  musicPreference   String  @default("any")
+  chatty            Boolean @default(true)
+  maxDetourKm       Float   @default(2.0)
+  
+  // CO2 Split Preferences
+  preferredCO2SplitAsDriver    Int @default(60) // percentage
+  preferredCO2SplitAsPassenger Int @default(40) // percentage
+  
+  // Language
+  preferredLanguages String[] @default(["english"])
+  
+  // Notifications
+  pushEnabled       Boolean @default(true)
+  smsEnabled        Boolean @default(false)
+  emailEnabled      Boolean @default(true)
+  matchAlerts       Boolean @default(true)
+  messageAlerts     Boolean @default(true)
+  rideReminders     Boolean @default(true)
+  monthlyReports    Boolean @default(true)
+  achievementAlerts Boolean @default(true)
+  
+  // Privacy
+  profileVisibility ProfileVisibility @default(BUILDING_ONLY)
+  showPhoneNumber   Boolean @default(false)
+  showFlatNumber    Boolean @default(true)
+  showRideHistory   Boolean @default(false)
+  showCO2Stats      Boolean @default(true)
+  allowDirectMessages Boolean @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model UserStatistics {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Ride Statistics
+  totalDistanceShared   Float   @default(0) // in km
+  totalMoneySaved       Float   @default(0) // in INR
+  totalCO2Saved         Float   @default(0) // in kg
+  totalRides            Int     @default(0)
+  ridesAsDriver         Int     @default(0)
+  ridesAsPassenger      Int     @default(0)
+  
+  // Social Statistics
+  uniqueRidePartners    Int     @default(0)
+  recurringRideBuddies  Int     @default(0)
+  buildingConnections   Int     @default(0)
+  
+  // Environmental Impact
+  treesEquivalent       Float   @default(0) // trees planted equivalent
+  plasticBottlesEquivalent Int  @default(0)
+  
+  // This Month Statistics
+  monthlyRides          Int     @default(0)
+  monthlyCO2Saved       Float   @default(0)
+  monthlyDistanceShared Float   @default(0)
+  
+  // Last Month for Comparison
+  lastMonthRides        Int     @default(0)
+  lastMonthCO2Saved     Float   @default(0)
+  
+  // Achievements
+  badges                String[] @default([])
+  level                 String   @default("newcomer")
+  points                Int      @default(0)
+  
+  // Streaks
+  currentStreak         Int      @default(0)
+  longestStreak         Int      @default(0)
+  lastRideDate          DateTime?
+  
+  updatedAt             DateTime @updatedAt
+  monthResetAt          DateTime @default(now())
+}
+
+model EmergencyContact {
+  id           String @id @default(cuid())
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name         String
+  relationship String
+  phoneNumber  String
+  isPrimary    Boolean @default(false)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// ============================================
+// BUILDING MANAGEMENT
+// ============================================
+
+model Building {
+  id              String   @id @default(cuid())
+  name            String
+  type            BuildingType
+  
+  // Address
+  street          String
+  area            String
+  city            String
+  state           String
+  pincode         String
+  country         String   @default("India")
+  
+  // Location (PostGIS)
+  latitude        Float
+  longitude       Float
+  
+  // Metadata
+  totalUnits      Int?
+  totalFloors     Int?
+  towers          String[] @default([])
+  
+  // Verification
+  isVerified      Boolean  @default(false)
+  verifiedBy      String?
+  
+  // Community Statistics
+  totalCO2Saved   Float    @default(0)
+  totalRides      Int      @default(0)
+  activeUsers     Int      @default(0)
+  
+  // Relations
+  users           User[]
+  rides           Ride[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([city, area])
+  @@index([pincode])
+  @@index([latitude, longitude])
+}
+
+// ============================================
+// RIDE MANAGEMENT
+// ============================================
+
+model Ride {
+  id              String   @id @default(cuid())
+  
+  // Creator
+  userId          String
+  user            User     @relation("CreatedRides", fields: [userId], references: [id])
+  
+  // Status
+  status          RideStatus @default(ACTIVE)
+  
+  // Type
+  type            RideType
+  
+  // Origin
+  buildingId      String
+  building        Building @relation(fields: [buildingId], references: [id])
+  originAddress   String
+  originLat       Float
+  originLng       Float
+  pickupPoint     String?
+  pickupLat       Float?
+  pickupLng       Float?
+  
+  // Destination
+  destinationName String
+  destinationAddress String
+  destinationLat  Float
+  destinationLng  Float
+  destinationPlaceId String?
+  
+  // Timing
+  departureTime   DateTime
+  flexibilityMinutes Int @default(15)
+  isImmediate     Boolean @default(false)
+  expiresAt       DateTime
+  actualStartTime DateTime?
+  actualEndTime   DateTime?
+  
+  // Capacity
+  totalSeats      Int @default(1)
+  availableSeats  Int @default(1)
+  
+  // Cost Sharing
+  costSharingEnabled Boolean @default(true)
+  estimatedCost   Float?
+  costPerPerson   Float?
+  currency        String @default("INR")
+  
+  // CO2 Impact
+  estimatedCO2Saved Float @default(0) // if matched
+  actualCO2Saved    Float @default(0) // after completion
+  routeDistance     Int? // meters
+  routeDuration     Int? // seconds
+  
+  // Preferences
+  genderPreference GenderPreference @default(ANY)
+  maxDetourKm     Float @default(2.0)
+  allowSmoking    Boolean @default(false)
+  allowPets       Boolean @default(false)
+  
+  // Route Information
+  routePolyline   String?
+  trafficCondition String?
+  
+  // Metadata
+  purpose         String?
+  tags            String[] @default([])
+  notes           String?
+  visibility      RideVisibility @default(BUILDING_ONLY)
+  isRecurring     Boolean @default(false)
+  recurringRideId String?
+  
+  // Relations
+  participants    RideParticipant[]
+  matches         Match[]
+  messages        Message[]
+  ratings         Rating[]
+  co2Splits       CO2Split[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([buildingId])
+  @@index([status])
+  @@index([departureTime])
+  @@index([expiresAt])
+  @@index([destinationLat, destinationLng])
+}
+
+model RideParticipant {
+  id          String @id @default(cuid())
+  
+  rideId      String
+  ride        Ride   @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User   @relation(fields: [userId], references: [id])
+  
+  role        ParticipantRole
+  status      ParticipantStatus @default(PENDING)
+  
+  joinedAt    DateTime @default(now())
+  confirmedAt DateTime?
+  leftAt      DateTime?
+  
+  // Cost split
+  agreedCost  Float?
+  paidAmount  Float?
+  paymentStatus PaymentStatus @default(PENDING)
+  
+  // CO2 Contribution
+  co2Earned   Float @default(0)
+  co2Percentage Int @default(40) // percentage of total CO2 saved
+  
+  @@unique([rideId, userId])
+  @@index([rideId])
+  @@index([userId])
+  @@index([status])
+}
+
+// ============================================
+// MATCHING SYSTEM
+// ============================================
+
+model Match {
+  id          String @id @default(cuid())
+  
+  // Source Ride
+  sourceRideId String
+  sourceRide   Ride   @relation(fields: [sourceRideId], references: [id], onDelete: Cascade)
+  
+  // Target User & Ride
+  targetUserId String
+  targetRideId String?
+  
+  // Scoring
+  score        Float
+  confidence   MatchConfidence
+  
+  // Compatibility Breakdown
+  destinationProximityScore Float
+  timeAlignmentScore        Float
+  trustScoreCompatibility   Float
+  co2SavingsPotential       Float // NEW: CO2 as a scoring factor
+  previousInteractionsScore Float
+  
+  // Distances & Times
+  destinationDistance Int  // meters
+  timeDifference      Int  // minutes
+  detourDistance      Int? // meters
+  additionalTime      Int? // minutes
+  
+  // Benefits
+  estimatedMoneySavings Float?
+  estimatedCO2Savings   Float  // kg - PROMINENTLY DISPLAYED
+  
+  // Status
+  status          MatchStatus @default(PENDING)
+  
+  // Metadata
+  reasons         String[] @default([])
+  
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime
+  respondedAt     DateTime?
+  
+  @@index([sourceRideId])
+  @@index([targetUserId])
+  @@index([status])
+  @@index([score])
+  @@index([createdAt])
+}
+
+// ============================================
+// CO2 TRACKING & SPLITTING
+// ============================================
+
+model CO2Split {
+  id              String @id @default(cuid())
+  
+  rideId          String
+  ride            Ride   @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  
+  // Total CO2 Saved
+  totalCO2Saved   Float // kg
+  
+  // Split Details
+  driverUserId    String
+  driverCO2Share  Float // kg
+  driverPercentage Int  // typically 60%
+  
+  passengerUserId String
+  passengerCO2Share Float // kg
+  passengerPercentage Int // typically 40%
+  
+  // Confirmation Status
+  driverConfirmed   Boolean @default(false)
+  passengerConfirmed Boolean @default(false)
+  disputeReason     String?
+  
+  // Final Status
+  status          CO2SplitStatus @default(PENDING)
+  finalizedAt     DateTime?
+  
+  // Calculation Metadata
+  routeDistance   Float // km
+  vehicleType     String
+  emissionFactor  Float // kg CO2 per km
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([rideId])
+  @@index([driverUserId])
+  @@index([passengerUserId])
+  @@index([status])
+}
+
+model MonthlyImpactReport {
+  id              String @id @default(cuid())
+  
+  userId          String
+  
+  // Time Period
+  month           Int // 1-12
+  year            Int
+  
+  // Statistics
+  totalRides      Int
+  totalCO2Saved   Float
+  totalDistance   Float
+  totalMoneySaved Float
+  
+  ridesAsDriver   Int
+  ridesAsPassenger Int
+  
+  uniquePartners  Int
+  buildingRank    Int?
+  cityRank        Int?
+  
+  // Comparisons
+  vsLastMonth     Float // percentage change
+  vsSameMonthLastYear Float?
+  
+  // Environmental Equivalents
+  treesEquivalent Float
+  plasticBottlesEquivalent Int
+  kmDrivenEquivalent Float
+  
+  // Achievements This Month
+  newBadgesEarned String[]
+  milestonesReached String[]
+  
+  // Report Generation
+  generatedAt     DateTime @default(now())
+  emailSent       Boolean @default(false)
+  emailSentAt     DateTime?
+  
+  @@unique([userId, month, year])
+  @@index([userId])
+  @@index([year, month])
+}
+
+// ============================================
+// GAMIFICATION & ACHIEVEMENTS
+// ============================================
+
+model Achievement {
+  id              String @id @default(cuid())
+  
+  name            String @unique
+  displayName     String
+  description     String
+  category        AchievementCategory
+  
+  // Requirements
+  requirementType String // "co2_saved", "rides_completed", "streak_days"
+  requirementValue Float
+  
+  // Rewards
+  badgeIcon       String
+  badgeColor      String
+  pointsAwarded   Int
+  
+  // Metadata
+  rarity          String // common, rare, epic, legendary
+  isSecret        Boolean @default(false)
+  
+  // Relations
+  userAchievements UserAchievement[]
+  
+  createdAt       DateTime @default(now())
+}
+
+model UserAchievement {
+  id              String @id @default(cuid())
+  
+  userId          String
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  achievementId   String
+  achievement     Achievement @relation(fields: [achievementId], references: [id])
+  
+  // Progress
+  currentProgress Float @default(0)
+  isCompleted     Boolean @default(false)
+  completedAt     DateTime?
+  
+  // Social
+  isShared        Boolean @default(false)
+  sharedAt        DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+  @@index([isCompleted])
+}
+
+model Leaderboard {
+  id              String @id @default(cuid())
+  
+  // Scope
+  type            LeaderboardType // building, city, global
+  scope           String // building_id or city_name
+  period          LeaderboardPeriod // daily, weekly, monthly, all_time
+  
+  // Time Period
+  startDate       DateTime
+  endDate         DateTime
+  
+  // Rankings (JSON array for performance)
+  rankings        Json // [{ userId, rank, score, name, co2Saved }]
+  
+  // Metadata
+  totalParticipants Int
+  lastUpdated     DateTime @default(now())
+  
+  @@unique([type, scope, period, startDate])
+  @@index([type, scope, period])
+  @@index([lastUpdated])
+}
+
+// ============================================
+// COMMUNICATION
+// ============================================
+
+model Conversation {
+  id          String @id @default(cuid())
+  
+  rideId      String?
+  
+  // Participants (array of user IDs)
+  participants String[]
+  
+  // Metadata
+  lastMessageAt DateTime?
+  messageCount  Int @default(0)
+  
+  // Relations
+  messages    Message[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([rideId])
+}
+
+model Message {
+  id              String @id @default(cuid())
+  
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  rideId          String?
+  
+  senderId        String
+  sender          User @relation("SentMessages", fields: [senderId], references: [id])
+  
+  recipientId     String?
+  recipient       User? @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  
+  // Content
+  type            MessageType @default(TEXT)
+  content         String
+  richContent     Json?
+  
+  // Attachments
+  attachmentType  String?
+  attachmentUrl   String?
+  
+  // Status
+  deliveryStatus  DeliveryStatus @default(SENT)
+  readStatus      ReadStatus @default(UNREAD)
+  readAt          DateTime?
+  
+  // Metadata
+  isQuickReply    Boolean @default(false)
+  isSystemMessage Boolean @default(false)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([conversationId])
+  @@index([rideId])
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([createdAt])
+}
+
+// ============================================
+// RATING & TRUST
+// ============================================
+
+model Rating {
+  id              String @id @default(cuid())
+  
+  rideId          String
+  
+  raterId         String
+  rater           User @relation("RaterUser", fields: [raterId], references: [id])
+  
+  ratedUserId     String
+  ratedUser       User @relation("RatedUser", fields: [ratedUserId], references: [id])
+  
+  // Overall Score
+  score           Int // 1-5
+  
+  // Detailed Aspects
+  punctuality     Int?
+  communication   Int?
+  friendliness    Int?
+  ecoConsciousness Int? // NEW: Rate partner's eco-awareness
+  
+  // Feedback
+  tags            String[] @default([])
+  feedback        String?
+  
+  // Metadata
+  isPublic        Boolean @default(true)
+  wouldRideAgain  Boolean @default(true)
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([rideId, raterId, ratedUserId])
+  @@index([ratedUserId])
+  @@index([score])
+}
+
+// ============================================
+// LOCATION TRACKING
+// ============================================
+
+model LocationUpdate {
+  id              String @id @default(cuid())
+  
+  userId          String
+  rideId          String?
+  
+  latitude        Float
+  longitude       Float
+  accuracy        Float
+  altitude        Float?
+  bearing         Float?
+  speed           Float?
+  
+  // Status
+  isMoving        Boolean @default(false)
+  
+  timestamp       DateTime @default(now())
+  batteryLevel    Int?
+  
+  @@index([userId, timestamp])
+  @@index([rideId, timestamp])
+}
+
+// ============================================
+// SAFETY & SECURITY
+// ============================================
+
+model SOSAlert {
+  id              String @id @default(cuid())
+  
+  userId          String
+  user            User @relation(fields: [userId], references: [id])
+  
+  rideId          String?
+  
+  severity        SOSSeverity
+  status          SOSStatus @default(ACTIVE)
+  
+  // Location
+  latitude        Float
+  longitude       Float
+  accuracy        Float
+  address         String?
+  
+  // Context
+  triggerMethod   String
+  rideStatus      String?
+  otherParticipants String[] @default([])
+  
+  // Notifications
+  notifiedContacts Boolean @default(false)
+  notifiedSupport  Boolean @default(false)
+  
+  // Response
+  supportChatId   String?
+  policeNotified  Boolean @default(false)
+  
+  // Resolution
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  outcome         String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id              String @id @default(cuid())
+  
+  userId          String
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type            NotificationType
+  title           String
+  body            String
+  
+  // Data Payload
+  data            Json?
+  
+  // Deep Link
+  actionUrl       String?
+  
+  // Status
+  read            Boolean @default(false)
+  readAt          DateTime?
+  
+  // Delivery
+  sentVia         String[] @default([])
+  delivered       Boolean @default(false)
+  deliveredAt     DateTime?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([userId, read])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
+}
+
+enum GenderPreference {
+  ANY
+  SAME_GENDER
+  MALE
+  FEMALE
+}
+
+enum VerificationMethod {
+  GPS
+  MANUAL
+  ADMIN_VERIFIED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+  DELETED
+}
+
+enum ProfileVisibility {
+  PUBLIC
+  BUILDING_ONLY
+  LOCALITY_ONLY
+  PRIVATE
+}
+
+enum BuildingType {
+  APARTMENT
+  GATED_COMMUNITY
+  PG_HOSTEL
+  INDEPENDENT_HOUSE
+  CAMPUS
+  COMMERCIAL
+}
+
+enum RideType {
+  OWN_CAR
+  LOOKING_FOR_RIDE
+  SHARED_CAB
+  PUBLIC_TRANSPORT
+  WALKING
+  CYCLING
+  TWO_WHEELER
+}
+
+enum RideStatus {
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum RideVisibility {
+  BUILDING_ONLY
+  LOCALITY_5KM
+  LOCALITY_10KM
+  CITY_WIDE
+}
+
+enum ParticipantRole {
+  DRIVER
+  PASSENGER
+}
+
+enum ParticipantStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  LEFT
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  DECLINED
+  REFUNDED
+}
+
+enum MatchConfidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum CO2SplitStatus {
+  PENDING
+  CONFIRMED
+  DISPUTED
+  RESOLVED
+}
+
+enum AchievementCategory {
+  CO2_MILESTONES
+  RIDE_COUNT
+  STREAK
+  SOCIAL
+  SPECIAL
+}
+
+enum LeaderboardType {
+  BUILDING
+  CITY
+  GLOBAL
+}
+
+enum LeaderboardPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  ALL_TIME
+}
+
+enum MessageType {
+  TEXT
+  LOCATION
+  QUICK_REPLY
+  SYSTEM
+}
+
+enum DeliveryStatus {
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum ReadStatus {
+  UNREAD
+  READ
+}
+
+enum SOSSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+}
+
+enum SOSStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  FALSE_ALARM
+}
+
+enum NotificationType {
+  MATCH_FOUND
+  MESSAGE_RECEIVED
+  RIDE_REMINDER
+  RIDE_STARTED
+  RIDE_COMPLETED
+  CO2_MILESTONE
+  ACHIEVEMENT_UNLOCKED
+  MONTHLY_REPORT
+  LEADERBOARD_UPDATE
+  SOS_ALERT
+  SYSTEM_ANNOUNCEMENT
+}
+
+
+This is the foundation of your EcoRide Local app with CO2 tracking at its core. Would you like me to continue with:
+TOML Configuration Files (authentication, CO2 calculation parameters, notifications)
+JSON Data Structures (API request/response examples)
+Implementation Plan (week-by-week development roadmap)
+Core Server Actions (TypeScript code for ride creation, matching, CO2 tracking)
+React Components (UI components for CO2 dashboard, ride creation)
+Deployment Guide (Vercel setup, environment variables)
+Let me know which section you'd like next!
+

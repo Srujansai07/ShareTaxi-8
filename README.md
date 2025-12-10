@@ -65,13 +65,31 @@ npm run test:ci
 ## 🌐 Environment Variables
 
 ```env
-DATABASE_URL=
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
-FCM_SERVER_KEY=
-TWILIO_ACCOUNT_SID=
-TWILIO_AUTH_TOKEN=
+# Required - Supabase
+DATABASE_URL=postgresql://...
+DIRECT_URL=postgresql://...
+NEXT_PUBLIC_SUPABASE_URL=https://[ref].supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Required - Demo Mode
+DEMO_MODE=true
+
+# Optional - Google Maps
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-map-key
+
+# Optional - Twilio SMS (skip for demo)
+# TWILIO_ACCOUNT_SID=
+# TWILIO_AUTH_TOKEN=
+```
+
+## 🧪 Local Testing
+
+```bash
+cd web
+npm install
+npm run dev
+# Open http://localhost:3001/login → Click "Quick Demo"
 ```
 
 ## 📱 Live Demo

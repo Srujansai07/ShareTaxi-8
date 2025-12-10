@@ -7,8 +7,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
   extensions = [postgis]
 }
 
@@ -63,6 +64,7 @@ model User {
   receivedRatings  Rating[]     @relation("RatedUser")
   sosAlerts        SOSAlert[]
   notifications    Notification[]
+  achievements     UserAchievement[]
   
   // Statistics
   stats         UserStatistics?
@@ -115,12 +117,34 @@ model UserPreferences {
   updatedAt         DateTime @updatedAt
 }
 
+// ============================================
+// OTP VERIFICATION
+// ============================================
+
+model OTPVerification {
+  id          String   @id @default(cuid())
+  phoneNumber String   @unique
+  
+  otpHash     String   // Hashed OTP for security
+  attempts    Int      @default(0)
+  
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([phoneNumber])
+  @@index([expiresAt])
+}
+
 model UserStatistics {
   id                    String  @id @default(cuid())
   userId                String  @unique
   user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  totalDistanceSaved    Float   @default(0) // in km
+  // Distance & Savings
+  totalDistanceShared   Float   @default(0) // in km
   totalMoneySaved       Float   @default(0) // in INR
   totalCO2Saved         Float   @default(0) // in kg
   totalRides            Int     @default(0)
@@ -129,10 +153,32 @@ model UserStatistics {
   newConnectionsMade    Int     @default(0)
   recurringRideBuddies  Int     @default(0)
   
-  // Badges
+  // CO2 Environmental Equivalents
+  treesEquivalent       Float   @default(0) // CO2 / 21kg per tree
+  plasticBottlesSaved   Int     @default(0) // CO2 * 1000 / 82g per bottle
+  carKmAvoided          Float   @default(0) // CO2 / 0.21 kg per km
+  
+  // Monthly Tracking (reset on 1st)
+  monthlyRides          Int     @default(0)
+  monthlyCO2Saved       Float   @default(0)
+  monthlyDistanceShared Float   @default(0)
+  lastMonthReset        DateTime @default(now())
+  
+  // Streaks
+  currentStreak         Int     @default(0)
+  longestStreak         Int     @default(0)
+  lastRideDate          DateTime?
+  
+  // Gamification
   badges                String[] @default([])
   level                 String   @default("newcomer")
   points                Int      @default(0)
+  ecoScore              Int      @default(0)
+  
+  // Leaderboard
+  buildingRank          Int?
+  cityRank              Int?
+  globalRank            Int?
   
   updatedAt             DateTime @updatedAt
 }
@@ -268,6 +314,7 @@ model Ride {
   matches         Match[]
   messages        Message[]
   ratings         Rating[]
+  co2Splits       CO2Split[]
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -641,6 +688,106 @@ model AnalyticsEvent {
 }
 
 // ============================================
+// CO2 TRACKING & GAMIFICATION
+// ============================================
+
+model CO2Split {
+  id              String @id @default(cuid())
+  
+  rideId          String
+  ride            Ride   @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  
+  // Total CO2 saved for this ride
+  totalCO2Saved   Float
+  
+  // Driver split
+  driverUserId    String
+  driverCO2Share  Float
+  driverPercentage Int @default(60)
+  
+  // Passenger split
+  passengerUserId String
+  passengerCO2Share Float
+  passengerPercentage Int @default(40)
+  
+  // Confirmation status
+  driverConfirmed   Boolean @default(false)
+  passengerConfirmed Boolean @default(false)
+  
+  status          CO2SplitStatus @default(PENDING)
+  finalizedAt     DateTime?
+  
+  // Calculation details
+  routeDistance   Float  // km
+  emissionFactor  Float  // kg CO2 per km (default 0.21)
+  vehicleType     String @default("CAR")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([rideId])
+  @@index([driverUserId])
+  @@index([passengerUserId])
+  @@index([status])
+}
+
+model Achievement {
+  id              String @id @default(cuid())
+  
+  name            String @unique
+  displayName     String
+  description     String
+  category        AchievementCategory
+  
+  // Requirements
+  requirementType String  // e.g., "co2_saved", "rides_completed", "streak_days"
+  requirementValue Float
+  
+  // Visual
+  icon            String  // Lucide icon name or URL
+  badgeColor      String  @default("#10B981") // Tailwind emerald-500
+  
+  // Rewards
+  pointsAwarded   Int     @default(0)
+  
+  // Rarity
+  rarity          AchievementRarity @default(COMMON)
+  
+  // Relations
+  userAchievements UserAchievement[]
+  
+  isActive        Boolean @default(true)
+  createdAt       DateTime @default(now())
+}
+
+model UserAchievement {
+  id              String @id @default(cuid())
+  
+  userId          String
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  achievementId   String
+  achievement     Achievement @relation(fields: [achievementId], references: [id])
+  
+  // Progress tracking
+  currentProgress Float   @default(0)
+  isCompleted     Boolean @default(false)
+  completedAt     DateTime?
+  
+  // Points awarded
+  pointsReceived  Int     @default(0)
+  
+  // Notification sent
+  notified        Boolean @default(false)
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([userId, isCompleted])
+}
+
+// ============================================
 // ENUMS
 // ============================================
 
@@ -785,4 +932,31 @@ enum NotificationType {
   RATING_REQUEST
   SOS_ALERT
   SYSTEM_ANNOUNCEMENT
+  ACHIEVEMENT_UNLOCKED
+  CO2_MILESTONE
+  STREAK_REMINDER
+}
+
+enum CO2SplitStatus {
+  PENDING
+  CONFIRMED
+  DISPUTED
+  RESOLVED
+}
+
+enum AchievementCategory {
+  CO2_MILESTONES
+  RIDE_COUNT
+  STREAK
+  SOCIAL
+  COMMUNITY
+  SPECIAL
+}
+
+enum AchievementRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  EPIC
+  LEGENDARY
 }

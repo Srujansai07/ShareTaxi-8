@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { sendOTP, verifyOTP } from '@/app/actions/auth'
+import { demoLogin } from '@/app/actions/demo'
 import { toast } from 'sonner'
-import { Phone, ArrowRight, Car, Shield, Sparkles } from 'lucide-react'
+import { Phone, ArrowRight, Car, Shield, Sparkles, Zap } from 'lucide-react'
 
 export default function LoginPage() {
     const router = useRouter()
@@ -180,6 +181,26 @@ export default function LoginPage() {
                             <Link href="/signup" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
                                 Sign up
                             </Link>
+                        </p>
+                    </div>
+
+                    {/* Demo Mode for Pitch */}
+                    <div className="mt-6 pt-4 border-t border-dashed border-slate-200 dark:border-slate-700">
+                        <button
+                            onClick={async () => {
+                                const result = await demoLogin()
+                                if (result.success) {
+                                    toast.success('Demo mode activated!')
+                                    router.push(result.redirectTo || '/dashboard')
+                                }
+                            }}
+                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-orange-500/30 transition-all hover:scale-[1.02]"
+                        >
+                            <Zap className="h-5 w-5" />
+                            Quick Demo (for pitch)
+                        </button>
+                        <p className="text-xs text-slate-400 text-center mt-2">
+                            Skip login and explore the app
                         </p>
                     </div>
                 </div>
