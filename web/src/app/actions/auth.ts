@@ -20,6 +20,9 @@ import {
 
 const USE_TWILIO = process.env.USE_TWILIO === 'true'
 const USE_SUPABASE_AUTH = process.env.USE_SUPABASE_AUTH !== 'false' // Default to true
+// PITCH_MODE: Accept any 6-digit OTP for demo/pitch without real SMS
+const PITCH_MODE = process.env.DEMO_MODE === 'true' || process.env.PITCH_MODE === 'true'
+const PITCH_OTP = '123456' // Default OTP for pitch mode
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -57,6 +60,16 @@ export async function sendOTP(formData: FormData) {
         const validated = phoneSchema.parse({
             phoneNumber: formData.get('phoneNumber')
         })
+
+        // PITCH_MODE: Skip real SMS and accept any OTP
+        if (PITCH_MODE) {
+            return {
+                success: true,
+                message: `Pitch mode: Use OTP ${PITCH_OTP}`,
+                provider: 'pitch',
+                debugOTP: PITCH_OTP
+            }
+        }
 
         // Check rate limit
         const rateLimit = await checkRateLimit(validated.phoneNumber)
@@ -139,8 +152,14 @@ export async function verifyOTP(formData: FormData) {
 
         let verificationResult: { success: boolean; error?: string }
 
+        // PITCH_MODE: Accept 123456 or any 6-digit OTP
+        if (PITCH_MODE) {
+            verificationResult = validated.otp === PITCH_OTP
+                ? { success: true }
+                : { success: false, error: `Invalid OTP. Use ${PITCH_OTP} for pitch demo.` }
+        }
         // Try Twilio Verify first
-        if (USE_TWILIO) {
+        else if (USE_TWILIO) {
             verificationResult = await verifyOTPViaTwilioVerify(
                 validated.phoneNumber,
                 validated.otp
